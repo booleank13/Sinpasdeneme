@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sinpaş Playable Ad</title>
+    <style>
+        /* Resets and Base Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Ad Container */
+        #ad-container {
+            width: 320px;
+            height: 480px;
+            background-color: #ffffff;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        header {
+            height: 70px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #ffffff;
+            border-bottom: 2px solid #f0f0f0;
+            z-index: 10;
+        }
+
+        header img {
+            max-height: 40px;
+            max-width: 80%;
+        }
+
+        /* Main Content */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-evenly;
+            padding: 20px;
+            background: linear-gradient(180deg, #ffffff 0%, #f9f9f9 100%);
+        }
+
+        h1 {
+            font-size: 22px;
+            color: #333;
+            text-align: center;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        p.subtitle {
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* Options Container */
+        .options {
+            display: flex;
+            width: 100%;
+            height: 220px;
+            gap: 15px;
+        }
+
+        .option-card {
+            flex: 1;
+            background: #fff;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-card:hover {
+            border-color: #D42E12;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(212, 46, 18, 0.15);
+        }
+
+        .option-card.selected {
+            border-color: #D42E12;
+            background-color: #fff5f5;
+        }
+
+        .option-icon {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 15px;
+            fill: #555;
+            transition: fill 0.3s ease;
+        }
+
+        .option-card:hover .option-icon,
+        .option-card.selected .option-icon {
+            fill: #D42E12;
+        }
+
+        .option-label {
+            font-size: 18px;
+            font-weight: 700;
+            color: #555;
+            text-transform: uppercase;
+        }
+
+        .option-card:hover .option-label,
+        .option-card.selected .option-label {
+            color: #D42E12;
+        }
+
+        /* Call to Action */
+        .cta-container {
+            width: 100%;
+            height: 50px;
+            margin-top: 10px;
+            opacity: 0; /* Hidden initially */
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+
+        .cta-container.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .btn-cta {
+            width: 100%;
+            height: 100%;
+            background-color: #D42E12;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-transform: uppercase;
+            box-shadow: 0 4px 10px rgba(212, 46, 18, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        /* Footer Text */
+        footer {
+            height: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 10px;
+            color: #999;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ad-container">
+        <header>
+            <!-- Using the white background logo version or colored one -->
+            <img src="https://www.sinpasyts.com/arabalanding/assets/images/logo.png" alt="Sinpaş Logo">
+        </header>
+
+        <main>
+            <div>
+                <h1>Hayalinizdeki Hangisi?</h1>
+                <p class="subtitle">Seçiminizi yapın, fırsatları yakalayın.</p>
+            </div>
+
+            <div class="options">
+                <!-- House Option -->
+                <div class="option-card" onclick="selectOption('ev')">
+                    <svg class="option-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 3L2 12H5V20H19V12H22L12 3ZM12 5.8L17 10.3V18H14V13H10V18H7V10.3L12 5.8Z"/>
+                    </svg>
+                    <span class="option-label">EV</span>
+                </div>
+
+                <!-- Car Option -->
+                <div class="option-card" onclick="selectOption('araba')">
+                    <svg class="option-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5H6.5C5.84 5 5.28 5.42 5.08 6.01L3 12V20C3 20.55 3.45 21 4 21H5C5.55 21 6 20.55 6 20V19H18V20C18 20.55 18.45 21 19 21H20C20.55 21 21 20.55 21 20V12L18.92 6.01ZM6.5 6.5H17.5L18.5 9H5.5L6.5 6.5ZM5 17V12H19V17H5ZM7.5 16C8.33 16 9 15.33 9 14.5C9 13.67 8.33 13 7.5 13C6.67 13 6 13.67 6 14.5C6 15.33 6.67 16 7.5 16ZM16.5 16C17.33 16 18 15.33 18 14.5C18 13.67 17.33 13 16.5 13C15.67 13 15 13.67 15 14.5C15 15.33 15.67 16 16.5 16Z"/>
+                    </svg>
+                    <span class="option-label">ARABA</span>
+                </div>
+            </div>
+
+            <div class="cta-container" id="cta-container">
+                <button class="btn-cta" onclick="handleClick()">HEMEN BAŞVUR</button>
+            </div>
+        </main>
+
+        <footer>
+            Sinpaş Tasarruf Finansman A.Ş.
+        </footer>
+    </div>
+
+    <script>
+        let selectedType = null;
+
+        // Define URLs
+        const urlAraba = "https://www.sinpasyts.com/arabalanding/?utm_source=tagon-cpm-crmmedya&utm_medium=desktop-postitial&utm_campaign=kirmizi-tablo-yeni-aracini-alacaklara-mujde-arac-finansmaninda-beklenen-destek";
+        // Defaulting House to main site as specific campaign wasn't provided,
+        // but often they are on the same domain.
+        const urlEv = "https://www.sinpasyts.com/";
+
+        function selectOption(type) {
+            selectedType = type;
+
+            // Remove selected class from all
+            document.querySelectorAll('.option-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+
+            // Add selected class to clicked
+            if (type === 'ev') {
+                document.querySelectorAll('.option-card')[0].classList.add('selected');
+            } else {
+                document.querySelectorAll('.option-card')[1].classList.add('selected');
+            }
+
+            // Show CTA
+            document.getElementById('cta-container').classList.add('visible');
+        }
+
+        function handleClick() {
+            if (!selectedType) return;
+
+            if (selectedType === 'araba') {
+                window.open(urlAraba, '_blank');
+            } else {
+                window.open(urlEv, '_blank');
+            }
+        }
+    </script>
+</body>
+</html>
