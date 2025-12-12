@@ -50,20 +50,33 @@
 
         /* Header */
         header {
-            height: 60px;
+            height: 50px;
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
             background-color: #ffffff;
             border-bottom: 1px solid #f0f0f0;
             z-index: 10;
             position: relative;
+            padding: 0 15px;
         }
 
         header img {
-            max-height: 35px;
-            max-width: 80%;
+            max-height: 25px;
         }
+
+        .timer {
+            font-size: 12px;
+            font-weight: 700;
+            color: #D42E12;
+            background: #fff0ed;
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .timer svg { width: 12px; height: 12px; fill: currentColor; }
 
         /* Progress Bar */
         .progress-bar {
@@ -71,11 +84,12 @@
             width: 100%;
             background-color: #f0f0f0;
             position: relative;
+            z-index: 10;
         }
         .progress-fill {
             height: 100%;
             background-color: #D42E12;
-            width: 33%;
+            width: 25%;
             transition: width 0.5s ease;
         }
 
@@ -107,15 +121,15 @@
 
         /* Typography */
         h1 {
-            font-size: 20px;
+            font-size: 18px;
             text-align: center;
             font-weight: 800;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             color: #222;
         }
 
         p.subtitle {
-            font-size: 13px;
+            font-size: 12px;
             color: #666;
             text-align: center;
             margin-bottom: 20px;
@@ -147,15 +161,21 @@
         .option-label { font-size: 16px; font-weight: 700; color: #555; }
         .option-card:hover .option-label { color: #D42E12; }
 
-        /* --- STEP 2: Budget Slider --- */
-        .budget-display {
-            font-size: 28px;
-            font-weight: 800;
-            color: #D42E12;
-            margin: 15px 0;
+        /* --- STEP 2: Smart Calculator --- */
+        .calc-box {
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 15px;
+            width: 100%;
+            margin-bottom: 20px;
             text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
-        .slider-container { width: 100%; padding: 0 10px; margin-bottom: 20px; }
+        .calc-label { font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 0.5px; }
+        .calc-value { font-size: 24px; font-weight: 800; color: #D42E12; margin: 5px 0; }
+
+        .slider-container { width: 100%; padding: 0 5px; margin-bottom: 20px; }
         input[type=range] {
             -webkit-appearance: none; width: 100%; height: 6px;
             background: #e0e0e0; border-radius: 3px; outline: none;
@@ -166,14 +186,7 @@
             background: #D42E12; cursor: pointer;
             box-shadow: 0 0 0 4px rgba(212, 46, 18, 0.2);
         }
-        .benefit-tags {
-            display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px;
-        }
-        .tag {
-            background-color: #fff0ed; color: #D42E12;
-            padding: 5px 10px; border-radius: 20px;
-            font-size: 11px; font-weight: 600;
-        }
+
         .btn-next {
             width: 100%; padding: 14px; background: #333; color: white;
             border: none; border-radius: 30px; font-size: 16px; font-weight: 700;
@@ -189,7 +202,6 @@
             border-radius: 10px;
             overflow: hidden;
             box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            /* Prevent touch actions on canvas so we can draw */
             touch-action: none;
         }
 
@@ -207,35 +219,37 @@
         .prize-text { font-size: 12px; font-weight: 600; opacity: 0.9; }
         .prize-value { font-size: 20px; font-weight: 800; margin-top: 5px; text-transform: uppercase; }
 
-        canvas {
-            position: absolute;
-            top: 0; left: 0;
-            cursor: crosshair;
+        canvas { position: absolute; top: 0; left: 0; cursor: crosshair; }
+
+        /* --- STEP 4: Lead Form --- */
+        .form-group {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            background: #f9f9f9;
+            transition: all 0.3s;
+            user-select: text; /* Allow text selection in inputs */
+        }
+        .form-input:focus {
+            border-color: #D42E12;
+            background: #fff;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(212, 46, 18, 0.1);
         }
 
         .btn-cta {
-            width: 100%;
-            padding: 16px;
-            background: #D42E12;
-            color: white;
-            border: none;
-            border-radius: 30px;
-            font-size: 18px;
-            font-weight: 700;
-            cursor: pointer;
-            text-transform: uppercase;
+            width: 100%; padding: 16px; background: #D42E12; color: white;
+            border: none; border-radius: 30px; font-size: 18px; font-weight: 700;
+            cursor: pointer; text-transform: uppercase;
             box-shadow: 0 4px 12px rgba(212, 46, 18, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.5s ease;
-            pointer-events: none;
-        }
-        .btn-cta.visible {
-            opacity: 1; transform: translateY(0); pointer-events: auto;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            margin-top: 10px;
         }
         .btn-cta svg { width: 20px; height: 20px; fill: white; }
 
@@ -246,8 +260,8 @@
         }
 
         footer {
-            text-align: center; font-size: 10px; color: #aaa;
-            padding: 10px; background: #fff; z-index: 10;
+            text-align: center; font-size: 9px; color: #aaa;
+            padding: 8px; background: #fff; z-index: 10;
         }
     </style>
 </head>
@@ -258,6 +272,10 @@
 
         <header>
             <img src="https://www.sinpasyts.com/arabalanding/assets/images/logo.png" alt="Sinpaş Logo">
+            <div class="timer">
+                <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                <span id="countdown">05:00</span>
+            </div>
         </header>
 
         <div class="progress-bar">
@@ -268,7 +286,7 @@
             <!-- View 1: Selection -->
             <div class="view active" id="view-1">
                 <h1>Hayalinizdeki Hangisi?</h1>
-                <p class="subtitle">Seçiminizi yapın.</p>
+                <p class="subtitle">Size en uygun tasarruf planını oluşturmak için seçiminizi yapın.</p>
                 <div class="options-grid">
                     <div class="option-card" onclick="goToStep2('ev')">
                         <svg class="option-icon" viewBox="0 0 24 24"><path d="M12 3L2 12H5V20H19V12H22L12 3ZM12 5.8L17 10.3V18H14V13H10V18H7V10.3L12 5.8Z"/></svg>
@@ -281,19 +299,22 @@
                 </div>
             </div>
 
-            <!-- View 2: Budget -->
+            <!-- View 2: Calculator -->
             <div class="view hidden-right" id="view-2">
-                <h1>Aylık Taksit Tutarınız</h1>
-                <p class="subtitle">Ödeme planınızı belirleyin.</p>
-                <div class="budget-display" id="budget-value">5.000 TL</div>
-                <div class="slider-container">
-                    <input type="range" min="1000" max="50000" step="500" value="5000" oninput="updateBudget(this.value)">
+                <h1>Hesaplayıcı</h1>
+                <p class="subtitle">Aylık ödeyebileceğiniz tutarı belirleyin.</p>
+
+                <div class="calc-box">
+                    <div class="calc-label">Aylık Taksit</div>
+                    <div class="calc-value" id="monthly-display">5.000 TL</div>
+                    <input type="range" min="1000" max="50000" step="500" value="5000" id="budget-range" oninput="updateCalculator(this.value)">
                 </div>
-                <div class="benefit-tags">
-                    <div class="tag">Faizsiz</div>
-                    <div class="tag">Peşinatsız</div>
-                    <div class="tag">Kefilsiz</div>
+
+                <div class="calc-box" style="background: #fff5f5; border-color: #ffdcd6;">
+                    <div class="calc-label">Tahmini Finansman Tutarı</div>
+                    <div class="calc-value" id="total-display">600.000 TL</div>
                 </div>
+
                 <button class="btn-next" onclick="goToStep3()">DEVAM ET</button>
             </div>
 
@@ -309,9 +330,22 @@
                     </div>
                     <canvas id="scratch-canvas" width="240" height="120"></canvas>
                 </div>
+            </div>
 
-                <button class="btn-cta" id="final-cta" onclick="handleFinalClick()">
-                    HEMEN BAŞVUR
+            <!-- View 4: Lead Form -->
+            <div class="view hidden-right" id="view-4">
+                <h1>Fırsatı Yakala</h1>
+                <p class="subtitle">Sonuçları kaydetmek için bilgilerinizi girin.</p>
+
+                <div class="form-group">
+                    <input type="text" id="input-name" class="form-input" placeholder="Adınız Soyadınız">
+                </div>
+                <div class="form-group">
+                    <input type="tel" id="input-phone" class="form-input" placeholder="Telefon Numaranız">
+                </div>
+
+                <button class="btn-cta" onclick="submitForm()">
+                    BAŞVURUYU TAMAMLA
                 </button>
             </div>
         </main>
@@ -323,20 +357,27 @@
 
     <script>
         let selectedType = null;
+        let monthlyBudget = 5000;
+
         const urlAraba = "https://www.sinpasyts.com/arabalanding/?utm_source=tagon-cpm-crmmedya&utm_medium=desktop-postitial&utm_campaign=kirmizi-tablo-yeni-aracini-alacaklara-mujde-arac-finansmaninda-beklenen-destek";
         const urlEv = "https://www.sinpasyts.com/";
 
         // --- Navigation ---
         function goToStep2(type) {
             selectedType = type;
-            document.getElementById('progress-fill').style.width = '66%';
+            document.getElementById('progress-fill').style.width = '50%';
             transition('view-1', 'view-2');
         }
 
         function goToStep3() {
-            document.getElementById('progress-fill').style.width = '100%';
+            document.getElementById('progress-fill').style.width = '75%';
             transition('view-2', 'view-3');
             initScratchCard();
+        }
+
+        function goToStep4() {
+            document.getElementById('progress-fill').style.width = '100%';
+            transition('view-3', 'view-4');
         }
 
         function transition(fromId, toId) {
@@ -346,69 +387,53 @@
             document.getElementById(toId).classList.add('active');
         }
 
-        function updateBudget(val) {
-            const formatted = new Intl.NumberFormat('tr-TR').format(val);
-            document.getElementById('budget-value').innerText = formatted + " TL";
+        // --- Calculator ---
+        function updateCalculator(val) {
+            monthlyBudget = parseInt(val);
+            const multiplier = 120; // 120 months estimation
+            const total = monthlyBudget * multiplier;
+
+            const fmt = new Intl.NumberFormat('tr-TR');
+            document.getElementById('monthly-display').innerText = fmt.format(monthlyBudget) + " TL";
+            document.getElementById('total-display').innerText = fmt.format(total) + " TL";
         }
 
-        function handleFinalClick() {
-            const target = selectedType === 'araba' ? urlAraba : urlEv;
-            window.open(target, '_blank');
-        }
-
-        // --- Scratch Card Logic ---
+        // --- Scratch Card ---
         let isDrawing = false;
         let isRevealed = false;
 
         function initScratchCard() {
             const canvas = document.getElementById('scratch-canvas');
             const ctx = canvas.getContext('2d');
-            const wrapper = document.getElementById('scratch-wrapper');
 
-            // Fill with silver
             ctx.fillStyle = '#CCCCCC';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Add text "Kazı"
             ctx.font = '20px sans-serif';
             ctx.fillStyle = '#888888';
             ctx.textAlign = 'center';
             ctx.fillText('KAZI', canvas.width/2, canvas.height/2 + 8);
 
-            // Add slight noise/pattern to make it look like a scratch card
             for(let i=0; i<500; i++) {
                 ctx.fillStyle = Math.random() > 0.5 ? '#bbbbbb' : '#dddddd';
                 ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, 2, 2);
             }
 
-            // Events
             const startDraw = (e) => { isDrawing = true; scratch(e); };
             const endDraw = () => { isDrawing = false; checkReveal(); };
             const moveDraw = (e) => { if(isDrawing) scratch(e); };
 
-            // Mouse
             canvas.addEventListener('mousedown', startDraw);
             window.addEventListener('mouseup', endDraw);
             canvas.addEventListener('mousemove', moveDraw);
-
-            // Touch
             canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDraw(e); });
             window.addEventListener('touchend', endDraw);
             canvas.addEventListener('touchmove', (e) => { e.preventDefault(); moveDraw(e); });
 
             function scratch(e) {
                 if(isRevealed) return;
-
                 const rect = canvas.getBoundingClientRect();
-                let x, y;
-
-                if(e.touches) {
-                    x = e.touches[0].clientX - rect.left;
-                    y = e.touches[0].clientY - rect.top;
-                } else {
-                    x = e.clientX - rect.left;
-                    y = e.clientY - rect.top;
-                }
+                let x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+                let y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
 
                 ctx.globalCompositeOperation = 'destination-out';
                 ctx.beginPath();
@@ -418,40 +443,45 @@
 
             function checkReveal() {
                 if(isRevealed) return;
-
-                // Simple pixel check (check every 10th pixel for performance)
                 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 let transparentPixels = 0;
                 const totalPixels = imageData.data.length / 4;
+                for (let i = 0; i < totalPixels; i += 10) if (imageData.data[i * 4 + 3] === 0) transparentPixels++;
 
-                for (let i = 0; i < totalPixels; i += 10) {
-                    if (imageData.data[i * 4 + 3] === 0) {
-                        transparentPixels++;
-                    }
-                }
-
-                // If > 40% cleared (accounting for sampling)
                 if ((transparentPixels * 10) > (totalPixels * 0.4)) {
-                    revealAll();
+                    isRevealed = true;
+                    canvas.style.transition = 'opacity 0.5s';
+                    canvas.style.opacity = '0';
+                    setTimeout(() => { canvas.style.display = 'none'; goToStep4(); spawnConfetti(); }, 500);
                 }
             }
+        }
 
-            function revealAll() {
-                isRevealed = true;
-                canvas.style.transition = 'opacity 0.5s';
-                canvas.style.opacity = '0';
-                setTimeout(() => { canvas.style.display = 'none'; }, 500);
+        // --- Lead Form & Submit ---
+        function submitForm() {
+            const name = document.getElementById('input-name').value;
+            const phone = document.getElementById('input-phone').value;
 
-                // Show CTA
-                document.getElementById('final-cta').classList.add('visible');
-                spawnConfetti();
+            if(!name || !phone) {
+                alert('Lütfen tüm alanları doldurunuz.');
+                return;
             }
+
+            // Construct final URL with params
+            let baseUrl = selectedType === 'araba' ? urlAraba : urlEv;
+            // Note: In a real ad, we might POST data to an API, but here we append to URL
+            const finalUrl = new URL(baseUrl);
+            finalUrl.searchParams.append('name', name);
+            finalUrl.searchParams.append('phone', phone);
+            finalUrl.searchParams.append('budget', monthlyBudget);
+
+            window.open(finalUrl.toString(), '_blank');
         }
 
         function spawnConfetti() {
             const container = document.getElementById('ad-container');
             const colors = ['#D42E12', '#FF6B6B', '#FFCC00'];
-            for (let i = 0; i < 50; i++) {
+            for (let i = 0; i < 30; i++) {
                 const particle = document.createElement('div');
                 particle.classList.add('particle');
                 particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
@@ -460,7 +490,7 @@
                 container.appendChild(particle);
 
                 const angle = Math.random() * Math.PI * 2;
-                const dist = 50 + Math.random() * 100;
+                const dist = 50 + Math.random() * 80;
                 const tx = Math.cos(angle) * dist;
                 const ty = Math.sin(angle) * dist;
 
@@ -470,6 +500,17 @@
                 ], { duration: 800, easing: 'ease-out' }).onfinish = () => particle.remove();
             }
         }
+
+        // --- Timer ---
+        let time = 300; // 5 minutes
+        setInterval(() => {
+            if(time <= 0) return;
+            time--;
+            const m = Math.floor(time / 60).toString().padStart(2, '0');
+            const s = (time % 60).toString().padStart(2, '0');
+            document.getElementById('countdown').innerText = `${m}:${s}`;
+        }, 1000);
+
     </script>
 </body>
 </html>
