@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sinpaş Tasarruf Koşusu</title>
+    <title>Sinpaş Süper Tasarruf Koşusu</title>
     <style>
         /* Resets */
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
         body {
-            background-color: #222;
+            background-color: #1a1a1a;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             overflow: hidden;
             display: flex;
@@ -25,61 +25,100 @@
             background-color: #333;
             overflow: hidden;
             box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            border-radius: 8px;
         }
 
         canvas { display: block; width: 100%; height: 100%; }
 
         /* UI Overlays */
-        .ui-layer {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-        }
-
         .hud {
             position: absolute; top: 10px; left: 10px; right: 10px;
-            display: flex; justify-content: space-between;
-            font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            display: flex; justify-content: space-between; align-items: flex-start;
+            font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.8);
             z-index: 5;
+            pointer-events: none;
         }
-        .score-box { font-size: 18px; color: #FFCC00; }
-        .logo-box img { height: 25px; }
+        .score-box { font-size: 20px; color: #FFD700; text-align: right; }
+        .score-label { font-size: 10px; color: #fff; display: block; opacity: 0.8; }
+        .logo-box img { height: 24px; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5)); }
+
+        .combo-box {
+            font-size: 14px; color: #00ff00; margin-top: 5px;
+            transition: transform 0.1s;
+        }
+        .combo-active { transform: scale(1.2); }
 
         /* Screens */
         .screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(5px);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             padding: 30px;
             text-align: center;
-            transition: opacity 0.3s;
+            transition: opacity 0.4s ease;
             pointer-events: auto;
+            z-index: 20;
         }
         .screen.hidden { opacity: 0; pointer-events: none; }
 
-        h1 { font-size: 26px; color: #D42E12; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        h1 {
+            font-size: 28px; color: #fff; margin-bottom: 10px;
+            text-transform: uppercase; letter-spacing: 1px;
+            background: linear-gradient(to right, #D42E12, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 900;
+        }
         p { font-size: 14px; color: #ddd; margin-bottom: 25px; line-height: 1.5; }
 
         .btn-start {
-            background: #D42E12; color: white; border: none; padding: 15px 40px;
-            font-size: 20px; font-weight: 800; border-radius: 30px;
+            background: linear-gradient(to bottom, #D42E12, #b02109);
+            color: white; border: none; padding: 16px 45px;
+            font-size: 20px; font-weight: 800; border-radius: 50px;
             cursor: pointer; text-transform: uppercase;
-            box-shadow: 0 4px 15px rgba(212, 46, 18, 0.4);
-            animation: pulse 1.5s infinite;
+            box-shadow: 0 6px 0 #8a1a07, 0 10px 20px rgba(0,0,0,0.4);
+            transition: transform 0.1s, box-shadow 0.1s;
         }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+        .btn-start:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #8a1a07, 0 4px 10px rgba(0,0,0,0.4);
         }
 
         /* Form styling */
         .form-group { width: 100%; margin-bottom: 15px; }
         .form-input {
-            width: 100%; padding: 12px; border-radius: 8px; border: none;
-            font-size: 14px; background: #fff; color: #333;
+            width: 100%; padding: 14px; border-radius: 12px; border: 2px solid #444;
+            font-size: 14px; background: #fff; color: #333; outline: none;
         }
-        .final-score { font-size: 32px; color: #FFCC00; font-weight: 800; margin: 10px 0 20px 0; }
+        .form-input:focus { border-color: #D42E12; }
+        .final-score {
+            font-size: 36px; color: #FFD700; font-weight: 800; margin: 10px 0 20px 0;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+        /* Tutorial Hand Animation */
+        .tutorial-hand {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            width: 50px;
+            height: 50px;
+            margin-left: -25px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M21,11L14,11V5C14,3.34 12.66,2 11,2C9.34,2 8,3.34 8,5V13.5H7.5C6.7,13.5 6.08,13.78 5.76,14.09L2.83,16.59L8.41,22.17C8.78,22.54 9.38,22.83 10,22.83H19C20.66,22.83 22,21.5 22,19.83V14C22,12.34 20.66,11 19,11Z"/></svg>') no-repeat center/contain;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+            animation: handSwipe 2s infinite;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s;
+            z-index: 10;
+        }
+
+        @keyframes handSwipe {
+            0% { transform: translateX(-50px) rotate(-10deg); }
+            50% { transform: translateX(50px) rotate(10deg); }
+            100% { transform: translateX(-50px) rotate(-10deg); }
+        }
     </style>
 </head>
 <body>
@@ -90,24 +129,31 @@
 
         <!-- HUD -->
         <div class="hud" id="hud" style="display:none;">
-            <div class="logo-box"><img src="https://www.sinpasyts.com/arabalanding/assets/images/logo.png" alt="Sinpaş"></div>
-            <div class="score-box"><span id="scoreDisplay">0</span> TL</div>
+            <div class="logo-box">
+                <img src="https://www.sinpasyts.com/arabalanding/assets/images/logo.png" alt="Sinpaş">
+            </div>
+            <div class="score-container">
+                <div class="score-box"><span class="score-label">BİRİKİM</span><span id="scoreDisplay">0</span> TL</div>
+                <div class="combo-box" id="comboDisplay"></div>
+            </div>
         </div>
+
+        <div class="tutorial-hand" id="tutorialHand"></div>
 
         <!-- Start Screen -->
         <div class="screen" id="startScreen">
-            <img src="https://www.sinpasyts.com/arabalanding/assets/images/logo.png" style="height: 40px; margin-bottom: 20px;">
-            <h1>Faizden Kaç<br>Tasarrufu Yakala</h1>
-            <p>Faiz engellerinden kaçın, birikimleri topla ve hayalindeki eve veya arabaya ulaş!</p>
+            <img src="https://www.sinpasyts.com/arabalanding/assets/images/logo.png" style="height: 45px; margin-bottom: 25px;">
+            <h1>Süper Tasarruf<br>Koşusu</h1>
+            <p><strong>Kalkanları</strong> topla, <strong>Faizden</strong> kaç!<br>Hayallerine giden yolu seç.</p>
             <button class="btn-start" onclick="startGame()">BAŞLA</button>
         </div>
 
         <!-- End Screen (Lead Form) -->
         <div class="screen hidden" id="endScreen">
-            <h1 style="font-size: 20px;">Tebrikler!</h1>
+            <h1 style="font-size: 22px;">Harika Birikim!</h1>
             <p style="margin-bottom: 5px;">Toplam Tasarruf Tutarınız:</p>
             <div class="final-score" id="finalScoreDisplay">0 TL</div>
-            <p style="font-size: 12px; margin-bottom: 15px;">Bu fırsatı kaçırmamak için bilgilerinizi bırakın.</p>
+            <p style="font-size: 12px; margin-bottom: 15px; max-width: 80%;">Kazandığınız avantajı kaybetmemek için hemen başvurun.</p>
 
             <div class="form-group">
                 <input type="text" id="name" class="form-input" placeholder="Adınız Soyadınız">
@@ -115,145 +161,195 @@
             <div class="form-group">
                 <input type="tel" id="phone" class="form-input" placeholder="Telefon Numaranız">
             </div>
-            <button class="btn-start" onclick="submitLead()" style="font-size: 16px; padding: 12px 30px;">FIRSATI YAKALA</button>
+            <button class="btn-start" onclick="submitLead()" style="font-size: 16px; padding: 14px 35px;">HEMEN BAŞVUR</button>
         </div>
     </div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+
+        // Game State
         let gameLoopId;
         let score = 0;
-        let speed = 5;
+        let speed = 6;
         let playerX = 160;
         let isGameOver = false;
         let gameTime = 0;
+        let combo = 1;
 
-        // Game Assets
-        const lanes = [60, 160, 260]; // 3 lanes x-coordinates
-        let entities = []; // Obstacles and Coins
+        // Powerups
+        let shieldActive = false;
+        let shieldTimer = 0;
+
+        // Assets
+        const lanes = [60, 160, 260];
+        let entities = [];
         let particles = [];
+        let roadOffset = 0;
 
-        // Branding Colors
-        const COLOR_RED = '#D42E12';
-        const COLOR_GOLD = '#FFCC00';
-        const COLOR_ROAD = '#444';
-        const COLOR_GRASS = '#2e8b57';
+        // Colors
+        const C_RED = '#E30613'; // Sinpas Red
+        const C_GOLD = '#FFD700';
+        const C_SHIELD = '#00BFFF';
+        const C_DARK = '#2C3E50';
 
         // URLs
         const urlAraba = "https://www.sinpasyts.com/arabalanding/?utm_source=tagon-cpm-crmmedya&utm_medium=desktop-postitial&utm_campaign=kirmizi-tablo-yeni-aracini-alacaklara-mujde-arac-finansmaninda-beklenen-destek";
         const urlEv = "https://www.sinpasyts.com/";
-        let selectedPath = null; // 'ev' or 'araba'
+        let selectedPath = null;
 
-        // --- Input Handling ---
+        // --- Input ---
         let isDragging = false;
 
         function handleInput(x) {
             if (isGameOver) return;
-            // Simple follow logic with smoothing
-            // Clamp to road boundaries
-            if (x < 20) x = 20;
-            if (x > 300) x = 300;
-            playerX = x;
+            // Smooth movement limit
+            playerX += (x - playerX) * 0.2;
+            if (playerX < 30) playerX = 30;
+            if (playerX > 290) playerX = 290;
         }
 
-        canvas.addEventListener('mousedown', (e) => { isDragging = true; handleInput(e.offsetX); });
-        window.addEventListener('mouseup', () => isDragging = false);
-        canvas.addEventListener('mousemove', (e) => { if(isDragging) handleInput(e.offsetX); });
+        // Mouse/Touch logic wrapper
+        const getX = (e) => (e.touches ? e.touches[0].clientX : e.clientX) - canvas.getBoundingClientRect().left;
 
-        canvas.addEventListener('touchstart', (e) => { isDragging = true; handleInput(e.touches[0].clientX - canvas.getBoundingClientRect().left); });
-        canvas.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            if(isDragging) handleInput(e.touches[0].clientX - canvas.getBoundingClientRect().left);
-        });
-        window.addEventListener('touchend', () => isDragging = false);
+        const startDrag = (e) => { isDragging = true; handleInput(getX(e)); document.getElementById('tutorialHand').style.opacity = '0'; };
+        const endDrag = () => { isDragging = false; };
+        const moveDrag = (e) => {
+            if(e.touches) e.preventDefault();
+            if(isDragging) handleInput(getX(e));
+        };
+
+        canvas.addEventListener('mousedown', startDrag);
+        window.addEventListener('mouseup', endDrag);
+        canvas.addEventListener('mousemove', moveDrag);
+
+        canvas.addEventListener('touchstart', startDrag);
+        window.addEventListener('touchend', endDrag);
+        canvas.addEventListener('touchmove', moveDrag);
 
 
-        // --- Game Logic ---
+        // --- Core Logic ---
 
         function startGame() {
             document.getElementById('startScreen').classList.add('hidden');
             document.getElementById('hud').style.display = 'flex';
+            document.getElementById('tutorialHand').style.opacity = '1';
+
+            // Reset State
             isGameOver = false;
             score = 0;
+            combo = 1;
             gameTime = 0;
             entities = [];
             particles = [];
             playerX = 160;
+            shieldActive = false;
+            shieldTimer = 0;
+            speed = 6;
+
             loop();
         }
 
         function spawnEntity() {
             const lane = lanes[Math.floor(Math.random() * lanes.length)];
-            const type = Math.random() > 0.4 ? 'bad' : 'good'; // 60% bad, 40% good
+            const rand = Math.random();
+            let type = 'good'; // coin default
+
+            if (rand > 0.9) type = 'shield'; // 10% shield
+            else if (rand > 0.5) type = 'bad'; // 40% obstacle
 
             entities.push({
                 x: lane,
-                y: -50,
+                y: -60,
                 type: type,
                 active: true,
-                scale: 0
+                scale: 0,
+                rotation: 0
             });
         }
 
         function update() {
             gameTime++;
-            speed = 5 + (gameTime / 500); // Gradually speed up
+            speed = 6 + (gameTime / 600); // Gradual speed increase
+            roadOffset = (roadOffset + speed) % 40;
 
-            // Spawn logic
-            if (gameTime % 40 === 0 && gameTime < 1000) {
+            // Shield Logic
+            if (shieldActive) {
+                shieldTimer--;
+                if (shieldTimer <= 0) shieldActive = false;
+            }
+
+            // Spawning
+            if (gameTime % 35 === 0 && gameTime < 1100) {
                 spawnEntity();
             }
 
-            // End game sequence trigger
-            if (gameTime === 1000) {
-                // Spawn the final gates
-                entities = []; // Clear current
-                entities.push({ type: 'gates', y: -400, active: true });
+            // End Game Sequence
+            if (gameTime === 1100) {
+                entities = [];
+                entities.push({ type: 'gates', x: 160, y: -400, active: true });
             }
 
-            // Update entities
+            // Entity Loop
             for (let i = entities.length - 1; i >= 0; i--) {
                 let e = entities[i];
                 e.y += speed;
-
-                // Spawn animation
                 if (e.scale < 1) e.scale += 0.1;
+                e.rotation += 0.05;
 
+                // Gates Collision
                 if (e.type === 'gates') {
-                    // Check collision with gates logic
-                    if (e.y > 350) { // Gates reached player
-                         // Determine which side player is on
-                         if (playerX < 160) selectedPath = 'ev';
-                         else selectedPath = 'araba';
-                         gameOver();
+                    if (e.y > 380) {
+                        selectedPath = playerX < 160 ? 'ev' : 'araba';
+                        gameOver();
                     }
                 }
+                // Standard Collision
                 else if (e.active) {
-                    // Collision Detection
-                    // Player is roughly at y=400, width=40, height=60
                     const dx = Math.abs(playerX - e.x);
                     const dy = Math.abs(400 - e.y);
 
-                    if (dx < 30 && dy < 40) {
+                    if (dx < 35 && dy < 40) {
                         e.active = false;
+
                         if (e.type === 'good') {
-                            score += 5000;
-                            createExplosion(e.x, e.y, COLOR_GOLD);
-                        } else {
-                            score = Math.max(0, score - 2000);
-                            createExplosion(e.x, e.y, COLOR_RED);
-                            // Shake effect could go here
+                            // Coin
+                            score += 1000 * combo;
+                            combo = Math.min(combo + 1, 5);
+                            createParticles(e.x, e.y, C_GOLD, 5);
+                            updateHUD();
                         }
-                        updateScore();
+                        else if (e.type === 'shield') {
+                            // Shield
+                            shieldActive = true;
+                            shieldTimer = 300; // 5 seconds approx
+                            score += 500;
+                            createParticles(e.x, e.y, C_SHIELD, 10);
+                            updateHUD();
+                        }
+                        else if (e.type === 'bad') {
+                            // Obstacle
+                            if (shieldActive) {
+                                // Blocked
+                                createParticles(e.x, e.y, '#fff', 5);
+                                score += 500; // Bonus for blocking
+                            } else {
+                                // Hit
+                                score = Math.max(0, score - 5000);
+                                combo = 1;
+                                screenShake();
+                                createParticles(e.x, e.y, C_RED, 10);
+                            }
+                            updateHUD();
+                        }
                     }
                 }
 
-                // Cleanup
-                if (e.y > 500) entities.splice(i, 1);
+                if (e.y > 550) entities.splice(i, 1);
             }
 
-            // Update Particles
+            // Particles
             for (let i = particles.length - 1; i >= 0; i--) {
                 let p = particles[i];
                 p.x += p.vx;
@@ -263,121 +359,194 @@
             }
         }
 
-        function createExplosion(x, y, color) {
-            for(let i=0; i<10; i++) {
+        function updateHUD() {
+            document.getElementById('scoreDisplay').innerText = new Intl.NumberFormat('tr-TR').format(score);
+            const comboEl = document.getElementById('comboDisplay');
+            if (combo > 1) {
+                comboEl.innerText = combo + "x KOMBO";
+                comboEl.classList.add('combo-active');
+                setTimeout(() => comboEl.classList.remove('combo-active'), 100);
+            } else {
+                comboEl.innerText = "";
+            }
+        }
+
+        // --- Visual Effects ---
+
+        let shakeTimer = 0;
+        function screenShake() {
+            shakeTimer = 10;
+        }
+
+        function createParticles(x, y, color, count) {
+            for(let i=0; i<count; i++) {
                 particles.push({
                     x: x, y: y,
-                    vx: (Math.random() - 0.5) * 10,
-                    vy: (Math.random() - 0.5) * 10,
-                    life: 20,
+                    vx: (Math.random() - 0.5) * 8,
+                    vy: (Math.random() - 0.5) * 8,
+                    life: 20 + Math.random() * 10,
                     color: color
                 });
             }
         }
 
-        function updateScore() {
-            document.getElementById('scoreDisplay').innerText = new Intl.NumberFormat('tr-TR').format(score);
+        function drawRoundRect(ctx, x, y, w, h, r) {
+            if (w < 2 * r) r = w / 2;
+            if (h < 2 * r) r = h / 2;
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.arcTo(x + w, y, x + w, y + h, r);
+            ctx.arcTo(x + w, y + h, x, y + h, r);
+            ctx.arcTo(x, y + h, x, y, r);
+            ctx.arcTo(x, y, x + w, y, r);
+            ctx.closePath();
         }
 
         // --- Drawing ---
 
         function draw() {
-            // Background
-            ctx.fillStyle = '#555'; // Road color
+            // Apply Shake
+            let dx = 0, dy = 0;
+            if (shakeTimer > 0) {
+                dx = (Math.random() - 0.5) * 10;
+                dy = (Math.random() - 0.5) * 10;
+                shakeTimer--;
+            }
+            ctx.save();
+            ctx.translate(dx, dy);
+
+            // 1. Road
+            ctx.fillStyle = '#444';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Grass sides
-            ctx.fillStyle = COLOR_GRASS;
-            ctx.fillRect(0, 0, 10, canvas.height);
-            ctx.fillRect(310, 0, 10, canvas.height);
+            // Grass
+            ctx.fillStyle = '#27ae60';
+            ctx.fillRect(0, 0, 15, canvas.height);
+            ctx.fillRect(305, 0, 15, canvas.height);
 
-            // Lane markers
-            ctx.strokeStyle = '#fff';
-            ctx.setLineDash([20, 20]);
-            ctx.lineDashOffset = -gameTime * speed; // Moving effect
+            // Road Markings (Stripes)
+            ctx.fillStyle = 'rgba(255,255,255,0.2)';
             ctx.beginPath();
-            ctx.moveTo(110, 0); ctx.lineTo(110, 480);
-            ctx.moveTo(210, 0); ctx.lineTo(210, 480);
+            ctx.rect(15, roadOffset - 40, 5, 40);
+            ctx.rect(15, roadOffset + 40, 5, 40); // Side detail
+            // ... simple side stripes
+
+            // Lane Lines
+            ctx.strokeStyle = '#fff';
+            ctx.setLineDash([30, 30]);
+            ctx.lineDashOffset = -roadOffset * 2; // Speed up dash visual
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(110, -50); ctx.lineTo(110, 530);
+            ctx.moveTo(210, -50); ctx.lineTo(210, 530);
             ctx.stroke();
 
-            // Entities
+            // 2. Entities
             entities.forEach(e => {
                 if (!e.active && e.type !== 'gates') return;
+                ctx.save();
+                if (typeof e.x === 'undefined') e.x = 160; // Fallback
+                ctx.translate(e.x, e.y);
+                ctx.scale(e.scale, e.scale);
 
                 if (e.type === 'good') {
-                    // Gold Coin / Safe
-                    ctx.save();
-                    ctx.translate(e.x, e.y);
-                    ctx.scale(e.scale, e.scale);
-                    ctx.fillStyle = COLOR_GOLD;
-                    ctx.beginPath(); ctx.arc(0, 0, 20, 0, Math.PI*2); ctx.fill();
-                    ctx.fillStyle = '#000';
-                    ctx.font = '20px Arial'; ctx.textAlign = 'center'; ctx.textBaseline='middle';
-                    ctx.fillText('₺', 0, 2);
-                    ctx.restore();
-                } else if (e.type === 'bad') {
-                    // Red Barrier / Interest
-                    ctx.save();
-                    ctx.translate(e.x, e.y);
-                    ctx.scale(e.scale, e.scale);
-                    ctx.fillStyle = COLOR_RED;
-                    ctx.fillRect(-20, -20, 40, 40);
-                    ctx.fillStyle = '#fff';
-                    ctx.font = '10px Arial'; ctx.textAlign = 'center';
-                    ctx.fillText('FAİZ', 0, 4);
-                    ctx.restore();
-                } else if (e.type === 'gates') {
-                    // Final Choice Gates
-                    const y = e.y;
-
-                    // Left Gate (Home)
-                    ctx.fillStyle = '#3498db';
-                    ctx.fillRect(0, y, 155, 100);
-                    ctx.fillStyle = '#fff';
-                    ctx.font = '20px Arial'; ctx.textAlign = 'center';
-                    ctx.fillText('EV', 77, y + 50);
-
-                    // Right Gate (Car)
-                    ctx.fillStyle = COLOR_RED;
-                    ctx.fillRect(165, y, 155, 100);
-                    ctx.fillStyle = '#fff';
-                    ctx.font = '20px Arial'; ctx.textAlign = 'center';
-                    ctx.fillText('ARABA', 242, y + 50);
-
-                    // Gate Post
-                    ctx.fillStyle = '#222';
-                    ctx.fillRect(155, y, 10, 100);
+                    // Gold Coin
+                    ctx.beginPath();
+                    ctx.fillStyle = '#FFD700'; // Outer
+                    ctx.arc(0, 0, 18, 0, Math.PI*2); ctx.fill();
+                    ctx.beginPath();
+                    ctx.fillStyle = '#F1C40F'; // Inner
+                    ctx.arc(0, 0, 14, 0, Math.PI*2); ctx.fill();
+                    ctx.fillStyle = '#B7950B';
+                    ctx.font = 'bold 16px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+                    ctx.fillText('₺', 0, 1);
+                    // Shine
+                    ctx.beginPath(); ctx.fillStyle='rgba(255,255,255,0.6)';
+                    ctx.arc(-6, -6, 4, 0, Math.PI*2); ctx.fill();
                 }
+                else if (e.type === 'bad') {
+                    // Spike Ball (Interest)
+                    ctx.fillStyle = C_RED;
+                    ctx.beginPath();
+                    for(let j=0; j<8; j++) {
+                        ctx.rotate(Math.PI/4);
+                        ctx.moveTo(0, -18); ctx.lineTo(6, -6); ctx.lineTo(-6, -6);
+                    }
+                    ctx.fill();
+                    ctx.beginPath(); ctx.arc(0,0,12,0,Math.PI*2); ctx.fill();
+                    ctx.fillStyle='#fff'; ctx.font='bold 9px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+                    ctx.fillText('FAİZ', 0, 0);
+                }
+                else if (e.type === 'shield') {
+                    // Shield Icon
+                    ctx.fillStyle = C_SHIELD;
+                    ctx.beginPath();
+                    ctx.moveTo(0, 15);
+                    ctx.bezierCurveTo(15, 10, 15, -15, 0, -20);
+                    ctx.bezierCurveTo(-15, -15, -15, 10, 0, 15);
+                    ctx.fill();
+                    ctx.strokeStyle = '#fff'; ctx.lineWidth=2; ctx.stroke();
+                }
+                else if (e.type === 'gates') {
+                    // Gates
+                    // Left (Home)
+                    ctx.fillStyle = '#3498db';
+                    ctx.fillRect(-160, 0, 150, 120);
+                    ctx.fillStyle = '#fff'; ctx.font='bold 24px Arial'; ctx.textAlign='center';
+                    ctx.fillText('EV', -85, 60);
+                    // Right (Car)
+                    ctx.fillStyle = C_RED;
+                    ctx.fillRect(10, 0, 150, 120);
+                    ctx.fillStyle = '#fff';
+                    ctx.fillText('ARABA', 85, 60);
+                }
+
+                ctx.restore();
             });
 
-            // Player
+            // 3. Player
             ctx.save();
             ctx.translate(playerX, 400);
-            // Shadow
-            ctx.fillStyle = 'rgba(0,0,0,0.5)';
-            ctx.beginPath(); ctx.ellipse(0, 30, 20, 10, 0, 0, Math.PI*2); ctx.fill();
 
-            // Body (Sinpas Colors)
-            ctx.fillStyle = '#fff';
-            ctx.beginPath();
-            ctx.roundRect(-20, -30, 40, 60, 10);
+            // Shield Aura
+            if (shieldActive) {
+                ctx.beginPath();
+                ctx.fillStyle = 'rgba(0, 191, 255, 0.3)';
+                ctx.arc(0, 0, 40 + Math.sin(gameTime*0.2)*5, 0, Math.PI*2);
+                ctx.fill();
+                ctx.strokeStyle = C_SHIELD; ctx.lineWidth=2; ctx.stroke();
+            }
+
+            // Car Body
+            ctx.fillStyle = '#fff'; // White body
+            // Main chassis
+            drawRoundRect(ctx, -22, -35, 44, 70, 10);
             ctx.fill();
-            // Stripe
-            ctx.fillStyle = COLOR_RED;
-            ctx.fillRect(-20, -10, 40, 20);
-            // Logo text
-            ctx.fillStyle = '#fff';
-            ctx.font = '10px Arial'; ctx.textAlign = 'center';
-            ctx.fillText('SİNPAŞ', 0, 4);
+            // Roof / Windshield
+            ctx.fillStyle = '#333';
+            drawRoundRect(ctx, -18, -15, 36, 30, 5);
+            ctx.fill();
+            // Racing Stripe (Sinpas Red)
+            ctx.fillStyle = C_RED;
+            ctx.fillRect(-22, -35, 44, 10); // Hood
+            ctx.fillRect(-22, 25, 44, 10); // Trunk
+
+            // Lights
+            ctx.fillStyle = '#f1c40f'; // Headlights
+            ctx.beginPath(); ctx.arc(-15, -30, 4, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(15, -30, 4, 0, Math.PI*2); ctx.fill();
+
             ctx.restore();
 
-            // Particles
+            // 4. Particles
             particles.forEach(p => {
                 ctx.fillStyle = p.color;
                 ctx.globalAlpha = p.life / 20;
-                ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.life/4, 0, Math.PI*2); ctx.fill();
                 ctx.globalAlpha = 1;
             });
+
+            ctx.restore(); // End Shake
         }
 
         function loop() {
@@ -391,18 +560,15 @@
             isGameOver = true;
             cancelAnimationFrame(gameLoopId);
 
-            // Show End Screen
             document.getElementById('hud').style.display = 'none';
             const endScreen = document.getElementById('endScreen');
             endScreen.classList.remove('hidden');
             document.getElementById('finalScoreDisplay').innerText = new Intl.NumberFormat('tr-TR').format(score) + " TL";
 
-            // Add visual flair based on selection
-            if(selectedPath === 'ev') {
-                endScreen.style.background = 'linear-gradient(rgba(0,0,0,0.9), rgba(52, 152, 219, 0.4))';
-            } else {
-                endScreen.style.background = 'linear-gradient(rgba(0,0,0,0.9), rgba(212, 46, 18, 0.4))';
-            }
+            // Dynamic bg based on choice
+            endScreen.style.background = selectedPath === 'ev'
+                ? 'linear-gradient(135deg, rgba(41, 128, 185, 0.95), rgba(44, 62, 80, 0.95))'
+                : 'linear-gradient(135deg, rgba(192, 57, 43, 0.95), rgba(44, 62, 80, 0.95))';
         }
 
         function submitLead() {
@@ -410,7 +576,7 @@
             const phone = document.getElementById('phone').value;
 
             let baseUrl = selectedPath === 'araba' ? urlAraba : urlEv;
-            if(!baseUrl) baseUrl = urlEv; // Fallback if died before gate selection logic fully registered (edge case)
+            if(!baseUrl) baseUrl = urlEv;
 
             const finalUrl = new URL(baseUrl);
             finalUrl.searchParams.append('name', name);
