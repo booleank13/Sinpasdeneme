@@ -15,7 +15,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f0f0f0;
+            background-color: #eef2f5;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -28,27 +28,32 @@
             width: 320px;
             height: 480px;
             background-color: #ffffff;
+            background-image: radial-gradient(#e0e0e0 1px, transparent 1px);
+            background-size: 20px 20px;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
             display: flex;
             flex-direction: column;
+            border-radius: 4px; /* Slight rounding for the container */
         }
 
         /* Header */
         header {
-            height: 70px;
+            height: 80px;
             display: flex;
             justify-content: center;
             align-items: center;
             background-color: #ffffff;
-            border-bottom: 2px solid #f0f0f0;
+            border-bottom: 1px solid #eee;
             z-index: 10;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            animation: fadeInDown 0.8s ease-out;
         }
 
         header img {
-            max-height: 40px;
-            max-width: 80%;
+            max-height: 45px;
+            max-width: 85%;
         }
 
         /* Main Content */
@@ -57,71 +62,95 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: space-evenly;
+            justify-content: center;
             padding: 20px;
-            background: linear-gradient(180deg, #ffffff 0%, #f9f9f9 100%);
+            position: relative;
+        }
+
+        .text-content {
+            margin-bottom: 25px;
+            animation: fadeInUp 0.8s ease-out 0.2s backwards;
         }
 
         h1 {
-            font-size: 22px;
-            color: #333;
+            font-size: 24px;
+            color: #222;
             text-align: center;
-            font-weight: 700;
-            margin-bottom: 10px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
         }
 
         p.subtitle {
-            font-size: 14px;
+            font-size: 15px;
             color: #666;
             text-align: center;
-            margin-bottom: 20px;
+            line-height: 1.4;
         }
 
         /* Options Container */
         .options {
             display: flex;
             width: 100%;
-            height: 220px;
+            height: 180px;
             gap: 15px;
+            margin-bottom: 20px;
         }
 
         .option-card {
             flex: 1;
-            background: #fff;
+            background: linear-gradient(145deg, #ffffff, #f5f5f5);
             border: 2px solid #e0e0e0;
-            border-radius: 12px;
+            border-radius: 16px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             position: relative;
             overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            animation: zoomIn 0.6s ease-out 0.4s backwards;
         }
+
+        /* Staggered entrance for cards */
+        .option-card:nth-child(1) { animation-delay: 0.4s; }
+        .option-card:nth-child(2) { animation-delay: 0.5s; }
 
         .option-card:hover {
             border-color: #D42E12;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(212, 46, 18, 0.15);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(212, 46, 18, 0.15);
         }
 
         .option-card.selected {
             border-color: #D42E12;
-            background-color: #fff5f5;
+            background: linear-gradient(145deg, #fff5f5, #ffebe8);
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(212, 46, 18, 0.2);
+            z-index: 2;
+        }
+
+        /* Dim the non-selected card */
+        .options.has-selection .option-card:not(.selected) {
+            opacity: 0.5;
+            transform: scale(0.95);
+            filter: grayscale(100%);
         }
 
         .option-icon {
-            width: 60px;
-            height: 60px;
+            width: 50px;
+            height: 50px;
             margin-bottom: 15px;
             fill: #555;
-            transition: fill 0.3s ease;
+            transition: fill 0.3s ease, transform 0.3s ease;
         }
 
         .option-card:hover .option-icon,
         .option-card.selected .option-icon {
             fill: #D42E12;
+            transform: scale(1.1);
         }
 
         .option-label {
@@ -129,6 +158,8 @@
             font-weight: 700;
             color: #555;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: color 0.3s ease;
         }
 
         .option-card:hover .option-label,
@@ -136,74 +167,155 @@
             color: #D42E12;
         }
 
+        /* Checkmark */
+        .checkmark {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 24px;
+            height: 24px;
+            background-color: #D42E12;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .checkmark svg {
+            width: 16px;
+            height: 16px;
+            fill: white;
+        }
+
+        .option-card.selected .checkmark {
+            opacity: 1;
+            transform: scale(1);
+        }
+
         /* Call to Action */
         .cta-container {
             width: 100%;
-            height: 50px;
-            margin-top: 10px;
-            opacity: 0; /* Hidden initially */
+            height: 56px;
+            margin-top: auto; /* Push to bottom of main */
+            opacity: 0;
             transform: translateY(20px);
             transition: all 0.5s ease;
+            pointer-events: none; /* Prevent clicks when hidden */
         }
 
         .cta-container.visible {
             opacity: 1;
             transform: translateY(0);
+            pointer-events: auto;
         }
 
         .btn-cta {
             width: 100%;
             height: 100%;
-            background-color: #D42E12;
+            background: linear-gradient(90deg, #D42E12, #ff4d30);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 30px; /* Pill shape */
             font-size: 18px;
-            font-weight: 700;
+            font-weight: 800;
             cursor: pointer;
             display: flex;
             justify-content: center;
             align-items: center;
             text-transform: uppercase;
-            box-shadow: 0 4px 10px rgba(212, 46, 18, 0.3);
-            animation: pulse 2s infinite;
+            box-shadow: 0 4px 15px rgba(212, 46, 18, 0.4);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s;
         }
 
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-            100% { transform: scale(1); }
+        .btn-cta:active {
+            transform: scale(0.98);
+        }
+
+        /* Shimmer Effect */
+        .btn-cta::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
+            transform: skewX(-25deg);
+            animation: shimmer 3s infinite;
         }
 
         /* Footer Text */
         footer {
-            height: 30px;
+            height: 40px;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 10px;
+            font-size: 11px;
             color: #999;
-            background-color: #f9f9f9;
+            background-color: #fff;
+            border-top: 1px solid #f0f0f0;
+            letter-spacing: 0.5px;
         }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes zoomIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            20% { left: 200%; }
+            100% { left: 200%; }
+        }
+
+        /* Confetti Particle */
+        .particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background-color: #D42E12;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
     </style>
 </head>
 <body>
 
     <div id="ad-container">
         <header>
-            <!-- Using the white background logo version or colored one -->
             <img src="https://www.sinpasyts.com/arabalanding/assets/images/logo.png" alt="Sinpaş Logo">
         </header>
 
         <main>
-            <div>
+            <div class="text-content">
                 <h1>Hayalinizdeki Hangisi?</h1>
-                <p class="subtitle">Seçiminizi yapın, fırsatları yakalayın.</p>
+                <p class="subtitle">Seçiminizi yapın, size özel fırsatlarla hayallerinize kavuşun.</p>
             </div>
 
-            <div class="options">
+            <div class="options" id="options-container">
                 <!-- House Option -->
-                <div class="option-card" onclick="selectOption('ev')">
+                <div class="option-card" onclick="selectOption('ev', this)">
+                    <div class="checkmark">
+                        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    </div>
                     <svg class="option-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path d="M12 3L2 12H5V20H19V12H22L12 3ZM12 5.8L17 10.3V18H14V13H10V18H7V10.3L12 5.8Z"/>
                     </svg>
@@ -211,7 +323,10 @@
                 </div>
 
                 <!-- Car Option -->
-                <div class="option-card" onclick="selectOption('araba')">
+                <div class="option-card" onclick="selectOption('araba', this)">
+                    <div class="checkmark">
+                        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    </div>
                     <svg class="option-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5H6.5C5.84 5 5.28 5.42 5.08 6.01L3 12V20C3 20.55 3.45 21 4 21H5C5.55 21 6 20.55 6 20V19H18V20C18 20.55 18.45 21 19 21H20C20.55 21 21 20.55 21 20V12L18.92 6.01ZM6.5 6.5H17.5L18.5 9H5.5L6.5 6.5ZM5 17V12H19V17H5ZM7.5 16C8.33 16 9 15.33 9 14.5C9 13.67 8.33 13 7.5 13C6.67 13 6 13.67 6 14.5C6 15.33 6.67 16 7.5 16ZM16.5 16C17.33 16 18 15.33 18 14.5C18 13.67 17.33 13 16.5 13C15.67 13 15 13.67 15 14.5C15 15.33 15.67 16 16.5 16Z"/>
                     </svg>
@@ -220,7 +335,9 @@
             </div>
 
             <div class="cta-container" id="cta-container">
-                <button class="btn-cta" onclick="handleClick()">HEMEN BAŞVUR</button>
+                <button class="btn-cta" onclick="handleClick()">
+                    HEMEN BAŞVUR
+                </button>
             </div>
         </main>
 
@@ -232,39 +349,84 @@
     <script>
         let selectedType = null;
 
-        // Define URLs
         const urlAraba = "https://www.sinpasyts.com/arabalanding/?utm_source=tagon-cpm-crmmedya&utm_medium=desktop-postitial&utm_campaign=kirmizi-tablo-yeni-aracini-alacaklara-mujde-arac-finansmaninda-beklenen-destek";
-        // Defaulting House to main site as specific campaign wasn't provided,
-        // but often they are on the same domain.
         const urlEv = "https://www.sinpasyts.com/";
 
-        function selectOption(type) {
+        function selectOption(type, element) {
+            if (selectedType === type) return; // Prevent re-triggering if already selected
+
             selectedType = type;
 
-            // Remove selected class from all
+            // UI Updates
+            const container = document.getElementById('options-container');
+            container.classList.add('has-selection');
+
             document.querySelectorAll('.option-card').forEach(card => {
                 card.classList.remove('selected');
             });
 
-            // Add selected class to clicked
-            if (type === 'ev') {
-                document.querySelectorAll('.option-card')[0].classList.add('selected');
-            } else {
-                document.querySelectorAll('.option-card')[1].classList.add('selected');
-            }
+            element.classList.add('selected');
 
             // Show CTA
             document.getElementById('cta-container').classList.add('visible');
+
+            // Trigger Effects
+            spawnConfetti(element);
+        }
+
+        function spawnConfetti(targetElement) {
+            const rect = targetElement.getBoundingClientRect();
+            // We need to account for the viewport if the body is centered
+            // But since our confetti is absolute to the document or body, let's use client coords
+            // However, the ad-container has position:relative. We should append particles to ad-container.
+
+            const container = document.getElementById('ad-container');
+            const containerRect = container.getBoundingClientRect();
+
+            // Center of the clicked card relative to container
+            const startX = rect.left + rect.width / 2 - containerRect.left;
+            const startY = rect.top + rect.height / 2 - containerRect.top;
+
+            const colors = ['#D42E12', '#FF6B6B', '#FFCC00', '#2ecc71', '#3498db'];
+
+            for (let i = 0; i < 30; i++) {
+                createParticle(container, startX, startY, colors[Math.floor(Math.random() * colors.length)]);
+            }
+        }
+
+        function createParticle(container, x, y, color) {
+            const particle = document.createElement('div');
+            particle.classList.add('particle');
+            particle.style.backgroundColor = color;
+            particle.style.left = x + 'px';
+            particle.style.top = y + 'px';
+
+            // Random direction and speed
+            const angle = Math.random() * Math.PI * 2;
+            const velocity = 5 + Math.random() * 5;
+            const tx = Math.cos(angle) * 50 * (Math.random() + 0.5);
+            const ty = Math.sin(angle) * 50 * (Math.random() + 0.5);
+
+            container.appendChild(particle);
+
+            // Animate using Web Animations API
+            const animation = particle.animate([
+                { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+                { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
+            ], {
+                duration: 600 + Math.random() * 400,
+                easing: 'cubic-bezier(0, .9, .57, 1)'
+            });
+
+            animation.onfinish = () => {
+                particle.remove();
+            };
         }
 
         function handleClick() {
             if (!selectedType) return;
-
-            if (selectedType === 'araba') {
-                window.open(urlAraba, '_blank');
-            } else {
-                window.open(urlEv, '_blank');
-            }
+            const target = selectedType === 'araba' ? urlAraba : urlEv;
+            window.open(target, '_blank');
         }
     </script>
 </body>
