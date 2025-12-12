@@ -63,14 +63,14 @@
         .screen.hidden { opacity: 0; pointer-events: none; }
 
         h1 {
-            font-size: 28px; color: #fff; margin-bottom: 10px;
+            font-size: 26px; color: #fff; margin-bottom: 10px;
             text-transform: uppercase; letter-spacing: 1px;
             background: linear-gradient(to right, #D42E12, #ff6b6b);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             font-weight: 900;
         }
-        p { font-size: 14px; color: #ddd; margin-bottom: 25px; line-height: 1.5; }
+        p { font-size: 13px; color: #ddd; margin-bottom: 25px; line-height: 1.5; }
 
         .btn-start {
             background: linear-gradient(to bottom, #D42E12, #b02109);
@@ -119,6 +119,14 @@
             50% { transform: translateX(50px) rotate(10deg); }
             100% { transform: translateX(-50px) rotate(-10deg); }
         }
+
+        .progress-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: rgba(255,255,255,0.2);
+            z-index: 6;
+        }
+        .progress-bar {
+            height: 100%; background: #00ff00; width: 0%; transition: width 0.2s linear;
+        }
     </style>
 </head>
 <body>
@@ -126,6 +134,10 @@
     <div id="ad-container">
         <!-- Canvas Game Layer -->
         <canvas id="gameCanvas" width="320" height="480"></canvas>
+
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
 
         <!-- HUD -->
         <div class="hud" id="hud" style="display:none;">
@@ -144,8 +156,8 @@
         <div class="screen" id="startScreen">
             <img src="https://www.sinpasyts.com/arabalanding/assets/images/logo.png" style="height: 45px; margin-bottom: 25px;">
             <h1>Süper Tasarruf<br>Koşusu</h1>
-            <p><strong>Kalkanları</strong> topla, <strong>Faizden</strong> kaç!<br>Hayallerine giden yolu seç.</p>
-            <button class="btn-start" onclick="startGame()">BAŞLA</button>
+            <p><strong>Kalkan</strong> ve <strong>Mıknatıs</strong> topla, <strong>Faizden</strong> kaç!<br>Hayallerine giden yolda birikim yap.</p>
+            <button class="btn-start" onclick="startGame()">YOLCULUĞA BAŞLA</button>
         </div>
 
         <!-- End Screen (Lead Form) -->
@@ -176,22 +188,28 @@
         let playerX = 160;
         let isGameOver = false;
         let gameTime = 0;
+        const TOTAL_GAME_TIME = 1300;
         let combo = 1;
 
         // Powerups
         let shieldActive = false;
         let shieldTimer = 0;
+        let magnetActive = false;
+        let magnetTimer = 0;
 
         // Assets
         const lanes = [60, 160, 260];
         let entities = [];
         let particles = [];
+        let scenery = [];
+        let speedLines = [];
         let roadOffset = 0;
 
         // Colors
         const C_RED = '#E30613'; // Sinpas Red
         const C_GOLD = '#FFD700';
         const C_SHIELD = '#00BFFF';
+        const C_MAGNET = '#9b59b6';
         const C_DARK = '#2C3E50';
 
         // URLs
@@ -204,13 +222,11 @@
 
         function handleInput(x) {
             if (isGameOver) return;
-            // Smooth movement limit
-            playerX += (x - playerX) * 0.2;
+            playerX += (x - playerX) * 0.15; // Smooth
             if (playerX < 30) playerX = 30;
             if (playerX > 290) playerX = 290;
         }
 
-        // Mouse/Touch logic wrapper
         const getX = (e) => (e.touches ? e.touches[0].clientX : e.clientX) - canvas.getBoundingClientRect().left;
 
         const startDrag = (e) => { isDragging = true; handleInput(getX(e)); document.getElementById('tutorialHand').style.opacity = '0'; };
@@ -236,16 +252,19 @@
             document.getElementById('hud').style.display = 'flex';
             document.getElementById('tutorialHand').style.opacity = '1';
 
-            // Reset State
             isGameOver = false;
             score = 0;
             combo = 1;
             gameTime = 0;
             entities = [];
             particles = [];
+            scenery = [];
+            speedLines = [];
             playerX = 160;
             shieldActive = false;
             shieldTimer = 0;
+            magnetActive = false;
+            magnetTimer = 0;
             speed = 6;
 
             loop();
@@ -254,10 +273,11 @@
         function spawnEntity() {
             const lane = lanes[Math.floor(Math.random() * lanes.length)];
             const rand = Math.random();
-            let type = 'good'; // coin default
+            let type = 'good'; // coin
 
-            if (rand > 0.9) type = 'shield'; // 10% shield
-            else if (rand > 0.5) type = 'bad'; // 40% obstacle
+            if (rand > 0.95) type = 'shield';
+            else if (rand > 0.90) type = 'magnet';
+            else if (rand > 0.55) type = 'bad';
 
             entities.push({
                 x: lane,
@@ -269,26 +289,66 @@
             });
         }
 
+        function spawnScenery() {
+            // Trees or buildings on side
+            const side = Math.random() > 0.5 ? 'left' : 'right';
+            const x = side === 'left' ? Math.random() * -20 : 320 + Math.random() * 20;
+            scenery.push({
+                x: x,
+                y: -50,
+                type: Math.random() > 0.7 ? 'building' : 'tree',
+                scale: 0.5 + Math.random() * 0.5
+            });
+        }
+
         function update() {
             gameTime++;
-            speed = 6 + (gameTime / 600); // Gradual speed increase
+            speed = 6 + (gameTime / 500);
             roadOffset = (roadOffset + speed) % 40;
 
-            // Shield Logic
+            document.getElementById('progressBar').style.width = Math.min((gameTime / TOTAL_GAME_TIME)*100, 100) + "%";
+
+            // Timers
             if (shieldActive) {
                 shieldTimer--;
                 if (shieldTimer <= 0) shieldActive = false;
             }
-
-            // Spawning
-            if (gameTime % 35 === 0 && gameTime < 1100) {
-                spawnEntity();
+            if (magnetActive) {
+                magnetTimer--;
+                if (magnetTimer <= 0) magnetActive = false;
             }
 
-            // End Game Sequence
-            if (gameTime === 1100) {
+            // Spawning
+            if (gameTime % 30 === 0 && gameTime < TOTAL_GAME_TIME) spawnEntity();
+            if (gameTime % 15 === 0) spawnScenery();
+
+            // Speed Lines
+            if (combo > 2 && Math.random() > 0.7) {
+                speedLines.push({
+                    x: Math.random() * 320,
+                    y: -50,
+                    len: 50 + Math.random() * 100,
+                    speed: speed * 2
+                });
+            }
+
+            // End Game
+            if (gameTime === TOTAL_GAME_TIME) {
                 entities = [];
+                // Spawn Gate
                 entities.push({ type: 'gates', x: 160, y: -400, active: true });
+            }
+
+            // Scenery Loop
+            for (let i = scenery.length - 1; i >= 0; i--) {
+                scenery[i].y += speed;
+                if(scenery[i].y > 500) scenery.splice(i, 1);
+            }
+
+            // Speed Lines Loop
+            for (let i = speedLines.length - 1; i >= 0; i--) {
+                speedLines[i].y += speedLines[i].speed;
+                if(speedLines[i].y > 500) speedLines.splice(i, 1);
             }
 
             // Entity Loop
@@ -298,14 +358,23 @@
                 if (e.scale < 1) e.scale += 0.1;
                 e.rotation += 0.05;
 
-                // Gates Collision
+                // Magnet Effect
+                if (magnetActive && e.type === 'good' && e.active) {
+                    const dx = playerX - e.x;
+                    const dy = 400 - e.y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    if (dist < 150) {
+                        e.x += dx * 0.1;
+                        e.y += dy * 0.1;
+                    }
+                }
+
                 if (e.type === 'gates') {
                     if (e.y > 380) {
                         selectedPath = playerX < 160 ? 'ev' : 'araba';
                         gameOver();
                     }
                 }
-                // Standard Collision
                 else if (e.active) {
                     const dx = Math.abs(playerX - e.x);
                     const dy = Math.abs(400 - e.y);
@@ -314,28 +383,28 @@
                         e.active = false;
 
                         if (e.type === 'good') {
-                            // Coin
                             score += 1000 * combo;
                             combo = Math.min(combo + 1, 5);
                             createParticles(e.x, e.y, C_GOLD, 5);
                             updateHUD();
                         }
                         else if (e.type === 'shield') {
-                            // Shield
-                            shieldActive = true;
-                            shieldTimer = 300; // 5 seconds approx
+                            shieldActive = true; shieldTimer = 300;
                             score += 500;
                             createParticles(e.x, e.y, C_SHIELD, 10);
                             updateHUD();
                         }
+                        else if (e.type === 'magnet') {
+                            magnetActive = true; magnetTimer = 300;
+                            score += 500;
+                            createParticles(e.x, e.y, C_MAGNET, 10);
+                            updateHUD();
+                        }
                         else if (e.type === 'bad') {
-                            // Obstacle
                             if (shieldActive) {
-                                // Blocked
                                 createParticles(e.x, e.y, '#fff', 5);
-                                score += 500; // Bonus for blocking
+                                score += 500;
                             } else {
-                                // Hit
                                 score = Math.max(0, score - 5000);
                                 combo = 1;
                                 screenShake();
@@ -371,21 +440,15 @@
             }
         }
 
-        // --- Visual Effects ---
-
         let shakeTimer = 0;
-        function screenShake() {
-            shakeTimer = 10;
-        }
+        function screenShake() { shakeTimer = 10; }
 
         function createParticles(x, y, color, count) {
             for(let i=0; i<count; i++) {
                 particles.push({
                     x: x, y: y,
-                    vx: (Math.random() - 0.5) * 8,
-                    vy: (Math.random() - 0.5) * 8,
-                    life: 20 + Math.random() * 10,
-                    color: color
+                    vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 8,
+                    life: 20 + Math.random() * 10, color: color
                 });
             }
         }
@@ -402,10 +465,32 @@
             ctx.closePath();
         }
 
-        // --- Drawing ---
+        function drawIconHome(ctx, x, y, size) {
+            ctx.beginPath();
+            ctx.moveTo(x, y - size/2);
+            ctx.lineTo(x + size/2, y);
+            ctx.lineTo(x + size/3, y);
+            ctx.lineTo(x + size/3, y + size/2);
+            ctx.lineTo(x - size/3, y + size/2);
+            ctx.lineTo(x - size/3, y);
+            ctx.lineTo(x - size/2, y);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function drawIconCar(ctx, x, y, size) {
+            ctx.beginPath();
+            ctx.moveTo(x - size/2, y + size/4);
+            ctx.lineTo(x - size/2, y - size/6);
+            ctx.lineTo(x - size/4, y - size/2);
+            ctx.lineTo(x + size/4, y - size/2);
+            ctx.lineTo(x + size/2, y - size/6);
+            ctx.lineTo(x + size/2, y + size/4);
+            ctx.closePath();
+            ctx.fill();
+        }
 
         function draw() {
-            // Apply Shake
             let dx = 0, dy = 0;
             if (shakeTimer > 0) {
                 dx = (Math.random() - 0.5) * 10;
@@ -415,7 +500,7 @@
             ctx.save();
             ctx.translate(dx, dy);
 
-            // 1. Road
+            // 1. Road & Background
             ctx.fillStyle = '#444';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -424,17 +509,28 @@
             ctx.fillRect(0, 0, 15, canvas.height);
             ctx.fillRect(305, 0, 15, canvas.height);
 
-            // Road Markings (Stripes)
-            ctx.fillStyle = 'rgba(255,255,255,0.2)';
-            ctx.beginPath();
-            ctx.rect(15, roadOffset - 40, 5, 40);
-            ctx.rect(15, roadOffset + 40, 5, 40); // Side detail
-            // ... simple side stripes
+            // Scenery
+            scenery.forEach(s => {
+                ctx.save();
+                ctx.translate(s.x, s.y);
+                ctx.scale(s.scale, s.scale);
+                if(s.type === 'tree') {
+                    ctx.fillStyle = '#8B4513'; ctx.fillRect(-5, 0, 10, 20);
+                    ctx.fillStyle = '#228B22'; ctx.beginPath(); ctx.arc(0, -10, 15, 0, Math.PI*2); ctx.fill();
+                } else {
+                    ctx.fillStyle = '#555'; ctx.fillRect(-10, -20, 20, 40);
+                    ctx.fillStyle = '#777'; ctx.fillRect(-8, -18, 5, 5); ctx.fillRect(3, -18, 5, 5);
+                }
+                ctx.restore();
+            });
 
-            // Lane Lines
+            // Markings
+            ctx.fillStyle = 'rgba(255,255,255,0.2)';
+            ctx.beginPath(); ctx.rect(15, roadOffset - 40, 5, 40); ctx.rect(15, roadOffset + 40, 5, 40);
+
             ctx.strokeStyle = '#fff';
             ctx.setLineDash([30, 30]);
-            ctx.lineDashOffset = -roadOffset * 2; // Speed up dash visual
+            ctx.lineDashOffset = -roadOffset * 2;
             ctx.lineWidth = 4;
             ctx.beginPath();
             ctx.moveTo(110, -50); ctx.lineTo(110, 530);
@@ -445,62 +541,45 @@
             entities.forEach(e => {
                 if (!e.active && e.type !== 'gates') return;
                 ctx.save();
-                if (typeof e.x === 'undefined') e.x = 160; // Fallback
+                if (typeof e.x === 'undefined') e.x = 160;
                 ctx.translate(e.x, e.y);
                 ctx.scale(e.scale, e.scale);
 
                 if (e.type === 'good') {
-                    // Gold Coin
-                    ctx.beginPath();
-                    ctx.fillStyle = '#FFD700'; // Outer
-                    ctx.arc(0, 0, 18, 0, Math.PI*2); ctx.fill();
-                    ctx.beginPath();
-                    ctx.fillStyle = '#F1C40F'; // Inner
-                    ctx.arc(0, 0, 14, 0, Math.PI*2); ctx.fill();
-                    ctx.fillStyle = '#B7950B';
-                    ctx.font = 'bold 16px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+                    ctx.beginPath(); ctx.fillStyle = '#FFD700'; ctx.arc(0, 0, 18, 0, Math.PI*2); ctx.fill();
+                    ctx.beginPath(); ctx.fillStyle = '#F1C40F'; ctx.arc(0, 0, 14, 0, Math.PI*2); ctx.fill();
+                    ctx.fillStyle = '#B7950B'; ctx.font = 'bold 16px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
                     ctx.fillText('₺', 0, 1);
-                    // Shine
-                    ctx.beginPath(); ctx.fillStyle='rgba(255,255,255,0.6)';
-                    ctx.arc(-6, -6, 4, 0, Math.PI*2); ctx.fill();
                 }
                 else if (e.type === 'bad') {
-                    // Spike Ball (Interest)
                     ctx.fillStyle = C_RED;
                     ctx.beginPath();
-                    for(let j=0; j<8; j++) {
-                        ctx.rotate(Math.PI/4);
-                        ctx.moveTo(0, -18); ctx.lineTo(6, -6); ctx.lineTo(-6, -6);
-                    }
+                    for(let j=0; j<8; j++) { ctx.rotate(Math.PI/4); ctx.moveTo(0, -18); ctx.lineTo(6, -6); ctx.lineTo(-6, -6); }
                     ctx.fill();
                     ctx.beginPath(); ctx.arc(0,0,12,0,Math.PI*2); ctx.fill();
-                    ctx.fillStyle='#fff'; ctx.font='bold 9px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
-                    ctx.fillText('FAİZ', 0, 0);
+                    ctx.fillStyle='#fff'; ctx.font='bold 9px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('FAİZ', 0, 0);
                 }
                 else if (e.type === 'shield') {
-                    // Shield Icon
                     ctx.fillStyle = C_SHIELD;
-                    ctx.beginPath();
-                    ctx.moveTo(0, 15);
-                    ctx.bezierCurveTo(15, 10, 15, -15, 0, -20);
-                    ctx.bezierCurveTo(-15, -15, -15, 10, 0, 15);
-                    ctx.fill();
+                    ctx.beginPath(); ctx.moveTo(0, 15); ctx.bezierCurveTo(15, 10, 15, -15, 0, -20); ctx.bezierCurveTo(-15, -15, -15, 10, 0, 15); ctx.fill();
+                    ctx.strokeStyle = '#fff'; ctx.lineWidth=2; ctx.stroke();
+                }
+                else if (e.type === 'magnet') {
+                    ctx.fillStyle = C_MAGNET;
+                    ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI, true); ctx.lineTo(-10, 0); ctx.arc(0, 0, 5, Math.PI, 0); ctx.lineTo(15, 0); ctx.fill(); // Simple U shape
                     ctx.strokeStyle = '#fff'; ctx.lineWidth=2; ctx.stroke();
                 }
                 else if (e.type === 'gates') {
-                    // Gates
                     // Left (Home)
-                    ctx.fillStyle = '#3498db';
-                    ctx.fillRect(-160, 0, 150, 120);
-                    ctx.fillStyle = '#fff'; ctx.font='bold 24px Arial'; ctx.textAlign='center';
-                    ctx.fillText('EV', -85, 60);
-                    // Right (Car)
-                    ctx.fillStyle = C_RED;
-                    ctx.fillRect(10, 0, 150, 120);
-                    ctx.fillStyle = '#fff';
-                    ctx.fillText('ARABA', 85, 60);
-                }
+                    ctx.fillStyle = '#3498db'; ctx.fillRect(-160, 0, 150, 120);
+                    ctx.fillStyle = '#fff'; drawIconHome(ctx, -85, 45, 50);
+                    ctx.fillStyle = '#fff'; ctx.font='bold 20px Arial'; ctx.textAlign='center'; ctx.fillText('EV', -85, 90);
 
+                    // Right (Car)
+                    ctx.fillStyle = C_RED; ctx.fillRect(10, 0, 150, 120);
+                    ctx.fillStyle = '#fff'; drawIconCar(ctx, 85, 45, 50);
+                    ctx.fillStyle = '#fff'; ctx.fillText('ARABA', 85, 90);
+                }
                 ctx.restore();
             });
 
@@ -508,45 +587,36 @@
             ctx.save();
             ctx.translate(playerX, 400);
 
-            // Shield Aura
             if (shieldActive) {
-                ctx.beginPath();
-                ctx.fillStyle = 'rgba(0, 191, 255, 0.3)';
-                ctx.arc(0, 0, 40 + Math.sin(gameTime*0.2)*5, 0, Math.PI*2);
-                ctx.fill();
+                ctx.beginPath(); ctx.fillStyle = 'rgba(0, 191, 255, 0.3)'; ctx.arc(0, 0, 45, 0, Math.PI*2); ctx.fill();
                 ctx.strokeStyle = C_SHIELD; ctx.lineWidth=2; ctx.stroke();
             }
+            if (magnetActive) {
+                ctx.beginPath(); ctx.fillStyle = 'rgba(155, 89, 182, 0.2)'; ctx.arc(0, 0, 150, 0, Math.PI*2); ctx.fill(); // Magnet range
+                ctx.strokeStyle = C_MAGNET; ctx.lineWidth=1; ctx.setLineDash([5,5]); ctx.stroke(); ctx.setLineDash([]);
+            }
 
-            // Car Body
-            ctx.fillStyle = '#fff'; // White body
-            // Main chassis
-            drawRoundRect(ctx, -22, -35, 44, 70, 10);
-            ctx.fill();
-            // Roof / Windshield
-            ctx.fillStyle = '#333';
-            drawRoundRect(ctx, -18, -15, 36, 30, 5);
-            ctx.fill();
-            // Racing Stripe (Sinpas Red)
-            ctx.fillStyle = C_RED;
-            ctx.fillRect(-22, -35, 44, 10); // Hood
-            ctx.fillRect(-22, 25, 44, 10); // Trunk
-
-            // Lights
-            ctx.fillStyle = '#f1c40f'; // Headlights
-            ctx.beginPath(); ctx.arc(-15, -30, 4, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.arc(15, -30, 4, 0, Math.PI*2); ctx.fill();
-
+            // Car
+            ctx.fillStyle = '#fff'; drawRoundRect(ctx, -22, -35, 44, 70, 10); ctx.fill();
+            ctx.fillStyle = '#333'; drawRoundRect(ctx, -18, -15, 36, 30, 5); ctx.fill();
+            ctx.fillStyle = C_RED; ctx.fillRect(-22, -35, 44, 10); ctx.fillRect(-22, 25, 44, 10);
+            ctx.fillStyle = '#f1c40f'; ctx.beginPath(); ctx.arc(-15, -30, 4, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(15, -30, 4, 0, Math.PI*2); ctx.fill();
             ctx.restore();
 
-            // 4. Particles
+            // 4. Speed Lines
+            speedLines.forEach(l => {
+                ctx.fillStyle = 'rgba(255,255,255,0.5)';
+                ctx.fillRect(l.x, l.y, 2, l.len);
+            });
+
+            // 5. Particles
             particles.forEach(p => {
-                ctx.fillStyle = p.color;
-                ctx.globalAlpha = p.life / 20;
+                ctx.fillStyle = p.color; ctx.globalAlpha = p.life / 20;
                 ctx.beginPath(); ctx.arc(p.x, p.y, p.life/4, 0, Math.PI*2); ctx.fill();
                 ctx.globalAlpha = 1;
             });
 
-            ctx.restore(); // End Shake
+            ctx.restore();
         }
 
         function loop() {
@@ -559,13 +629,11 @@
         function gameOver() {
             isGameOver = true;
             cancelAnimationFrame(gameLoopId);
-
             document.getElementById('hud').style.display = 'none';
+            document.getElementById('progressBar').parentElement.style.display = 'none';
             const endScreen = document.getElementById('endScreen');
             endScreen.classList.remove('hidden');
             document.getElementById('finalScoreDisplay').innerText = new Intl.NumberFormat('tr-TR').format(score) + " TL";
-
-            // Dynamic bg based on choice
             endScreen.style.background = selectedPath === 'ev'
                 ? 'linear-gradient(135deg, rgba(41, 128, 185, 0.95), rgba(44, 62, 80, 0.95))'
                 : 'linear-gradient(135deg, rgba(192, 57, 43, 0.95), rgba(44, 62, 80, 0.95))';
@@ -574,18 +642,14 @@
         function submitLead() {
             const name = document.getElementById('name').value;
             const phone = document.getElementById('phone').value;
-
             let baseUrl = selectedPath === 'araba' ? urlAraba : urlEv;
             if(!baseUrl) baseUrl = urlEv;
-
             const finalUrl = new URL(baseUrl);
             finalUrl.searchParams.append('name', name);
             finalUrl.searchParams.append('phone', phone);
             finalUrl.searchParams.append('score', score);
-
             window.open(finalUrl.toString(), '_blank');
         }
-
     </script>
 </body>
 </html>
