@@ -2,514 +2,423 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sinpaş Playable Ad</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sinpaş Tasarruf Koşusu</title>
     <style>
-        /* Resets and Base Styles */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
-        }
-
+        /* Resets */
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #eef2f5;
+            background-color: #222;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            overflow: hidden;
-            color: #333;
+            color: white;
         }
 
-        /* Ad Container */
         #ad-container {
             width: 320px;
             height: 480px;
-            background-color: #ffffff;
             position: relative;
+            background-color: #333;
             overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-            display: flex;
-            flex-direction: column;
-            border-radius: 8px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
         }
 
-        /* Background Decoration */
-        .bg-pattern {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-image: radial-gradient(#e0e0e0 1px, transparent 1px);
-            background-size: 20px 20px;
-            z-index: 0;
-            opacity: 0.5;
+        canvas { display: block; width: 100%; height: 100%; }
+
+        /* UI Overlays */
+        .ui-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
 
-        /* Header */
-        header {
-            height: 50px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: #ffffff;
-            border-bottom: 1px solid #f0f0f0;
-            z-index: 10;
-            position: relative;
-            padding: 0 15px;
+        .hud {
+            position: absolute; top: 10px; left: 10px; right: 10px;
+            display: flex; justify-content: space-between;
+            font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            z-index: 5;
         }
+        .score-box { font-size: 18px; color: #FFCC00; }
+        .logo-box img { height: 25px; }
 
-        header img {
-            max-height: 25px;
-        }
-
-        .timer {
-            font-size: 12px;
-            font-weight: 700;
-            color: #D42E12;
-            background: #fff0ed;
-            padding: 4px 8px;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .timer svg { width: 12px; height: 12px; fill: currentColor; }
-
-        /* Progress Bar */
-        .progress-bar {
-            height: 4px;
-            width: 100%;
-            background-color: #f0f0f0;
-            position: relative;
-            z-index: 10;
-        }
-        .progress-fill {
-            height: 100%;
-            background-color: #D42E12;
-            width: 25%;
-            transition: width 0.5s ease;
-        }
-
-        /* Main Views */
-        main {
-            flex: 1;
-            position: relative;
-            z-index: 1;
-            overflow: hidden;
-        }
-
-        .view {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.5s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.5s ease;
-        }
-
-        .view.hidden-right { transform: translateX(100%); opacity: 0; pointer-events: none; }
-        .view.hidden-left { transform: translateX(-100%); opacity: 0; pointer-events: none; }
-        .view.active { transform: translateX(0); opacity: 1; pointer-events: auto; }
-
-        /* Typography */
-        h1 {
-            font-size: 18px;
+        /* Screens */
+        .screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 30px;
             text-align: center;
-            font-weight: 800;
-            margin-bottom: 8px;
-            color: #222;
+            transition: opacity 0.3s;
+            pointer-events: auto;
         }
+        .screen.hidden { opacity: 0; pointer-events: none; }
 
-        p.subtitle {
-            font-size: 12px;
-            color: #666;
-            text-align: center;
-            margin-bottom: 20px;
-            line-height: 1.4;
-        }
+        h1 { font-size: 26px; color: #D42E12; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        p { font-size: 14px; color: #ddd; margin-bottom: 25px; line-height: 1.5; }
 
-        /* --- STEP 1: Selection --- */
-        .options-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            width: 100%;
-        }
-
-        .option-card {
-            background: linear-gradient(145deg, #ffffff, #f9f9f9);
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            padding: 20px 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .option-card:hover { border-color: #D42E12; transform: translateY(-3px); }
-        .option-icon { width: 48px; height: 48px; margin-bottom: 10px; fill: #555; transition: fill 0.3s; }
-        .option-card:hover .option-icon { fill: #D42E12; }
-        .option-label { font-size: 16px; font-weight: 700; color: #555; }
-        .option-card:hover .option-label { color: #D42E12; }
-
-        /* --- STEP 2: Smart Calculator --- */
-        .calc-box {
-            background: #fff;
-            border: 1px solid #eee;
-            border-radius: 8px;
-            padding: 15px;
-            width: 100%;
-            margin-bottom: 20px;
-            text-align: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        }
-        .calc-label { font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 0.5px; }
-        .calc-value { font-size: 24px; font-weight: 800; color: #D42E12; margin: 5px 0; }
-
-        .slider-container { width: 100%; padding: 0 5px; margin-bottom: 20px; }
-        input[type=range] {
-            -webkit-appearance: none; width: 100%; height: 6px;
-            background: #e0e0e0; border-radius: 3px; outline: none;
-        }
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none; appearance: none;
-            width: 24px; height: 24px; border-radius: 50%;
-            background: #D42E12; cursor: pointer;
-            box-shadow: 0 0 0 4px rgba(212, 46, 18, 0.2);
-        }
-
-        .btn-next {
-            width: 100%; padding: 14px; background: #333; color: white;
-            border: none; border-radius: 30px; font-size: 16px; font-weight: 700;
-            cursor: pointer; margin-top: 10px;
-        }
-
-        /* --- STEP 3: Scratch Card --- */
-        .scratch-wrapper {
-            position: relative;
-            width: 240px;
-            height: 120px;
-            margin: 20px auto;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            touch-action: none;
-        }
-
-        .prize-layer {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(45deg, #D42E12, #ff6b6b);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            text-align: center;
-        }
-        .prize-text { font-size: 12px; font-weight: 600; opacity: 0.9; }
-        .prize-value { font-size: 20px; font-weight: 800; margin-top: 5px; text-transform: uppercase; }
-
-        canvas { position: absolute; top: 0; left: 0; cursor: crosshair; }
-
-        /* --- STEP 4: Lead Form --- */
-        .form-group {
-            width: 100%;
-            margin-bottom: 15px;
-        }
-        .form-input {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
-            background: #f9f9f9;
-            transition: all 0.3s;
-            user-select: text; /* Allow text selection in inputs */
-        }
-        .form-input:focus {
-            border-color: #D42E12;
-            background: #fff;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(212, 46, 18, 0.1);
-        }
-
-        .btn-cta {
-            width: 100%; padding: 16px; background: #D42E12; color: white;
-            border: none; border-radius: 30px; font-size: 18px; font-weight: 700;
+        .btn-start {
+            background: #D42E12; color: white; border: none; padding: 15px 40px;
+            font-size: 20px; font-weight: 800; border-radius: 30px;
             cursor: pointer; text-transform: uppercase;
-            box-shadow: 0 4px 12px rgba(212, 46, 18, 0.3);
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(212, 46, 18, 0.4);
+            animation: pulse 1.5s infinite;
         }
-        .btn-cta svg { width: 20px; height: 20px; fill: white; }
-
-        /* Confetti */
-        .particle {
-            position: absolute; width: 6px; height: 6px;
-            background: #D42E12; pointer-events: none; z-index: 100;
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
 
-        footer {
-            text-align: center; font-size: 9px; color: #aaa;
-            padding: 8px; background: #fff; z-index: 10;
+        /* Form styling */
+        .form-group { width: 100%; margin-bottom: 15px; }
+        .form-input {
+            width: 100%; padding: 12px; border-radius: 8px; border: none;
+            font-size: 14px; background: #fff; color: #333;
         }
+        .final-score { font-size: 32px; color: #FFCC00; font-weight: 800; margin: 10px 0 20px 0; }
     </style>
 </head>
 <body>
 
     <div id="ad-container">
-        <div class="bg-pattern"></div>
+        <!-- Canvas Game Layer -->
+        <canvas id="gameCanvas" width="320" height="480"></canvas>
 
-        <header>
-            <img src="https://www.sinpasyts.com/arabalanding/assets/images/logo.png" alt="Sinpaş Logo">
-            <div class="timer">
-                <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
-                <span id="countdown">05:00</span>
-            </div>
-        </header>
-
-        <div class="progress-bar">
-            <div class="progress-fill" id="progress-fill"></div>
+        <!-- HUD -->
+        <div class="hud" id="hud" style="display:none;">
+            <div class="logo-box"><img src="https://www.sinpasyts.com/arabalanding/assets/images/logo.png" alt="Sinpaş"></div>
+            <div class="score-box"><span id="scoreDisplay">0</span> TL</div>
         </div>
 
-        <main>
-            <!-- View 1: Selection -->
-            <div class="view active" id="view-1">
-                <h1>Hayalinizdeki Hangisi?</h1>
-                <p class="subtitle">Size en uygun tasarruf planını oluşturmak için seçiminizi yapın.</p>
-                <div class="options-grid">
-                    <div class="option-card" onclick="goToStep2('ev')">
-                        <svg class="option-icon" viewBox="0 0 24 24"><path d="M12 3L2 12H5V20H19V12H22L12 3ZM12 5.8L17 10.3V18H14V13H10V18H7V10.3L12 5.8Z"/></svg>
-                        <span class="option-label">EV</span>
-                    </div>
-                    <div class="option-card" onclick="goToStep2('araba')">
-                        <svg class="option-icon" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5H6.5C5.84 5 5.28 5.42 5.08 6.01L3 12V20C3 20.55 3.45 21 4 21H5C5.55 21 6 20.55 6 20V19H18V20C18 20.55 18.45 21 19 21H20C20.55 21 21 20.55 21 20V12L18.92 6.01ZM6.5 6.5H17.5L18.5 9H5.5L6.5 6.5ZM5 17V12H19V17H5ZM7.5 16C8.33 16 9 15.33 9 14.5C9 13.67 8.33 13 7.5 13C6.67 13 6 13.67 6 14.5C6 15.33 6.67 16 7.5 16ZM16.5 16C17.33 16 18 15.33 18 14.5C18 13.67 17.33 13 16.5 13C15.67 13 15 13.67 15 14.5C15 15.33 15.67 16 16.5 16Z"/></svg>
-                        <span class="option-label">ARABA</span>
-                    </div>
-                </div>
+        <!-- Start Screen -->
+        <div class="screen" id="startScreen">
+            <img src="https://www.sinpasyts.com/arabalanding/assets/images/logo.png" style="height: 40px; margin-bottom: 20px;">
+            <h1>Faizden Kaç<br>Tasarrufu Yakala</h1>
+            <p>Faiz engellerinden kaçın, birikimleri topla ve hayalindeki eve veya arabaya ulaş!</p>
+            <button class="btn-start" onclick="startGame()">BAŞLA</button>
+        </div>
+
+        <!-- End Screen (Lead Form) -->
+        <div class="screen hidden" id="endScreen">
+            <h1 style="font-size: 20px;">Tebrikler!</h1>
+            <p style="margin-bottom: 5px;">Toplam Tasarruf Tutarınız:</p>
+            <div class="final-score" id="finalScoreDisplay">0 TL</div>
+            <p style="font-size: 12px; margin-bottom: 15px;">Bu fırsatı kaçırmamak için bilgilerinizi bırakın.</p>
+
+            <div class="form-group">
+                <input type="text" id="name" class="form-input" placeholder="Adınız Soyadınız">
             </div>
-
-            <!-- View 2: Calculator -->
-            <div class="view hidden-right" id="view-2">
-                <h1>Hesaplayıcı</h1>
-                <p class="subtitle">Aylık ödeyebileceğiniz tutarı belirleyin.</p>
-
-                <div class="calc-box">
-                    <div class="calc-label">Aylık Taksit</div>
-                    <div class="calc-value" id="monthly-display">5.000 TL</div>
-                    <input type="range" min="1000" max="50000" step="500" value="5000" id="budget-range" oninput="updateCalculator(this.value)">
-                </div>
-
-                <div class="calc-box" style="background: #fff5f5; border-color: #ffdcd6;">
-                    <div class="calc-label">Tahmini Finansman Tutarı</div>
-                    <div class="calc-value" id="total-display">600.000 TL</div>
-                </div>
-
-                <button class="btn-next" onclick="goToStep3()">DEVAM ET</button>
+            <div class="form-group">
+                <input type="tel" id="phone" class="form-input" placeholder="Telefon Numaranız">
             </div>
-
-            <!-- View 3: Scratch Card -->
-            <div class="view hidden-right" id="view-3">
-                <h1>Sürprizi Yakala!</h1>
-                <p class="subtitle">Fırsatı görmek için alanı kazıyın.</p>
-
-                <div class="scratch-wrapper" id="scratch-wrapper">
-                    <div class="prize-layer">
-                        <span class="prize-text">SİZE ÖZEL FIRSAT</span>
-                        <span class="prize-value">DOSYA MASRAFI<br>BİZDEN!</span>
-                    </div>
-                    <canvas id="scratch-canvas" width="240" height="120"></canvas>
-                </div>
-            </div>
-
-            <!-- View 4: Lead Form -->
-            <div class="view hidden-right" id="view-4">
-                <h1>Fırsatı Yakala</h1>
-                <p class="subtitle">Sonuçları kaydetmek için bilgilerinizi girin.</p>
-
-                <div class="form-group">
-                    <input type="text" id="input-name" class="form-input" placeholder="Adınız Soyadınız">
-                </div>
-                <div class="form-group">
-                    <input type="tel" id="input-phone" class="form-input" placeholder="Telefon Numaranız">
-                </div>
-
-                <button class="btn-cta" onclick="submitForm()">
-                    BAŞVURUYU TAMAMLA
-                </button>
-            </div>
-        </main>
-
-        <footer>
-            Sinpaş Tasarruf Finansman A.Ş.
-        </footer>
+            <button class="btn-start" onclick="submitLead()" style="font-size: 16px; padding: 12px 30px;">FIRSATI YAKALA</button>
+        </div>
     </div>
 
     <script>
-        let selectedType = null;
-        let monthlyBudget = 5000;
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let gameLoopId;
+        let score = 0;
+        let speed = 5;
+        let playerX = 160;
+        let isGameOver = false;
+        let gameTime = 0;
 
+        // Game Assets
+        const lanes = [60, 160, 260]; // 3 lanes x-coordinates
+        let entities = []; // Obstacles and Coins
+        let particles = [];
+
+        // Branding Colors
+        const COLOR_RED = '#D42E12';
+        const COLOR_GOLD = '#FFCC00';
+        const COLOR_ROAD = '#444';
+        const COLOR_GRASS = '#2e8b57';
+
+        // URLs
         const urlAraba = "https://www.sinpasyts.com/arabalanding/?utm_source=tagon-cpm-crmmedya&utm_medium=desktop-postitial&utm_campaign=kirmizi-tablo-yeni-aracini-alacaklara-mujde-arac-finansmaninda-beklenen-destek";
         const urlEv = "https://www.sinpasyts.com/";
+        let selectedPath = null; // 'ev' or 'araba'
 
-        // --- Navigation ---
-        function goToStep2(type) {
-            selectedType = type;
-            document.getElementById('progress-fill').style.width = '50%';
-            transition('view-1', 'view-2');
+        // --- Input Handling ---
+        let isDragging = false;
+
+        function handleInput(x) {
+            if (isGameOver) return;
+            // Simple follow logic with smoothing
+            // Clamp to road boundaries
+            if (x < 20) x = 20;
+            if (x > 300) x = 300;
+            playerX = x;
         }
 
-        function goToStep3() {
-            document.getElementById('progress-fill').style.width = '75%';
-            transition('view-2', 'view-3');
-            initScratchCard();
+        canvas.addEventListener('mousedown', (e) => { isDragging = true; handleInput(e.offsetX); });
+        window.addEventListener('mouseup', () => isDragging = false);
+        canvas.addEventListener('mousemove', (e) => { if(isDragging) handleInput(e.offsetX); });
+
+        canvas.addEventListener('touchstart', (e) => { isDragging = true; handleInput(e.touches[0].clientX - canvas.getBoundingClientRect().left); });
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if(isDragging) handleInput(e.touches[0].clientX - canvas.getBoundingClientRect().left);
+        });
+        window.addEventListener('touchend', () => isDragging = false);
+
+
+        // --- Game Logic ---
+
+        function startGame() {
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('hud').style.display = 'flex';
+            isGameOver = false;
+            score = 0;
+            gameTime = 0;
+            entities = [];
+            particles = [];
+            playerX = 160;
+            loop();
         }
 
-        function goToStep4() {
-            document.getElementById('progress-fill').style.width = '100%';
-            transition('view-3', 'view-4');
+        function spawnEntity() {
+            const lane = lanes[Math.floor(Math.random() * lanes.length)];
+            const type = Math.random() > 0.4 ? 'bad' : 'good'; // 60% bad, 40% good
+
+            entities.push({
+                x: lane,
+                y: -50,
+                type: type,
+                active: true,
+                scale: 0
+            });
         }
 
-        function transition(fromId, toId) {
-            document.getElementById(fromId).classList.remove('active');
-            document.getElementById(fromId).classList.add('hidden-left');
-            document.getElementById(toId).classList.remove('hidden-right');
-            document.getElementById(toId).classList.add('active');
-        }
+        function update() {
+            gameTime++;
+            speed = 5 + (gameTime / 500); // Gradually speed up
 
-        // --- Calculator ---
-        function updateCalculator(val) {
-            monthlyBudget = parseInt(val);
-            const multiplier = 120; // 120 months estimation
-            const total = monthlyBudget * multiplier;
-
-            const fmt = new Intl.NumberFormat('tr-TR');
-            document.getElementById('monthly-display').innerText = fmt.format(monthlyBudget) + " TL";
-            document.getElementById('total-display').innerText = fmt.format(total) + " TL";
-        }
-
-        // --- Scratch Card ---
-        let isDrawing = false;
-        let isRevealed = false;
-
-        function initScratchCard() {
-            const canvas = document.getElementById('scratch-canvas');
-            const ctx = canvas.getContext('2d');
-
-            ctx.fillStyle = '#CCCCCC';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.font = '20px sans-serif';
-            ctx.fillStyle = '#888888';
-            ctx.textAlign = 'center';
-            ctx.fillText('KAZI', canvas.width/2, canvas.height/2 + 8);
-
-            for(let i=0; i<500; i++) {
-                ctx.fillStyle = Math.random() > 0.5 ? '#bbbbbb' : '#dddddd';
-                ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, 2, 2);
+            // Spawn logic
+            if (gameTime % 40 === 0 && gameTime < 1000) {
+                spawnEntity();
             }
 
-            const startDraw = (e) => { isDrawing = true; scratch(e); };
-            const endDraw = () => { isDrawing = false; checkReveal(); };
-            const moveDraw = (e) => { if(isDrawing) scratch(e); };
-
-            canvas.addEventListener('mousedown', startDraw);
-            window.addEventListener('mouseup', endDraw);
-            canvas.addEventListener('mousemove', moveDraw);
-            canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDraw(e); });
-            window.addEventListener('touchend', endDraw);
-            canvas.addEventListener('touchmove', (e) => { e.preventDefault(); moveDraw(e); });
-
-            function scratch(e) {
-                if(isRevealed) return;
-                const rect = canvas.getBoundingClientRect();
-                let x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-                let y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-
-                ctx.globalCompositeOperation = 'destination-out';
-                ctx.beginPath();
-                ctx.arc(x, y, 15, 0, 2 * Math.PI);
-                ctx.fill();
+            // End game sequence trigger
+            if (gameTime === 1000) {
+                // Spawn the final gates
+                entities = []; // Clear current
+                entities.push({ type: 'gates', y: -400, active: true });
             }
 
-            function checkReveal() {
-                if(isRevealed) return;
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                let transparentPixels = 0;
-                const totalPixels = imageData.data.length / 4;
-                for (let i = 0; i < totalPixels; i += 10) if (imageData.data[i * 4 + 3] === 0) transparentPixels++;
+            // Update entities
+            for (let i = entities.length - 1; i >= 0; i--) {
+                let e = entities[i];
+                e.y += speed;
 
-                if ((transparentPixels * 10) > (totalPixels * 0.4)) {
-                    isRevealed = true;
-                    canvas.style.transition = 'opacity 0.5s';
-                    canvas.style.opacity = '0';
-                    setTimeout(() => { canvas.style.display = 'none'; goToStep4(); spawnConfetti(); }, 500);
+                // Spawn animation
+                if (e.scale < 1) e.scale += 0.1;
+
+                if (e.type === 'gates') {
+                    // Check collision with gates logic
+                    if (e.y > 350) { // Gates reached player
+                         // Determine which side player is on
+                         if (playerX < 160) selectedPath = 'ev';
+                         else selectedPath = 'araba';
+                         gameOver();
+                    }
                 }
+                else if (e.active) {
+                    // Collision Detection
+                    // Player is roughly at y=400, width=40, height=60
+                    const dx = Math.abs(playerX - e.x);
+                    const dy = Math.abs(400 - e.y);
+
+                    if (dx < 30 && dy < 40) {
+                        e.active = false;
+                        if (e.type === 'good') {
+                            score += 5000;
+                            createExplosion(e.x, e.y, COLOR_GOLD);
+                        } else {
+                            score = Math.max(0, score - 2000);
+                            createExplosion(e.x, e.y, COLOR_RED);
+                            // Shake effect could go here
+                        }
+                        updateScore();
+                    }
+                }
+
+                // Cleanup
+                if (e.y > 500) entities.splice(i, 1);
+            }
+
+            // Update Particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life--;
+                if(p.life <= 0) particles.splice(i, 1);
             }
         }
 
-        // --- Lead Form & Submit ---
-        function submitForm() {
-            const name = document.getElementById('input-name').value;
-            const phone = document.getElementById('input-phone').value;
-
-            if(!name || !phone) {
-                alert('Lütfen tüm alanları doldurunuz.');
-                return;
+        function createExplosion(x, y, color) {
+            for(let i=0; i<10; i++) {
+                particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10,
+                    life: 20,
+                    color: color
+                });
             }
+        }
 
-            // Construct final URL with params
-            let baseUrl = selectedType === 'araba' ? urlAraba : urlEv;
-            // Note: In a real ad, we might POST data to an API, but here we append to URL
+        function updateScore() {
+            document.getElementById('scoreDisplay').innerText = new Intl.NumberFormat('tr-TR').format(score);
+        }
+
+        // --- Drawing ---
+
+        function draw() {
+            // Background
+            ctx.fillStyle = '#555'; // Road color
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Grass sides
+            ctx.fillStyle = COLOR_GRASS;
+            ctx.fillRect(0, 0, 10, canvas.height);
+            ctx.fillRect(310, 0, 10, canvas.height);
+
+            // Lane markers
+            ctx.strokeStyle = '#fff';
+            ctx.setLineDash([20, 20]);
+            ctx.lineDashOffset = -gameTime * speed; // Moving effect
+            ctx.beginPath();
+            ctx.moveTo(110, 0); ctx.lineTo(110, 480);
+            ctx.moveTo(210, 0); ctx.lineTo(210, 480);
+            ctx.stroke();
+
+            // Entities
+            entities.forEach(e => {
+                if (!e.active && e.type !== 'gates') return;
+
+                if (e.type === 'good') {
+                    // Gold Coin / Safe
+                    ctx.save();
+                    ctx.translate(e.x, e.y);
+                    ctx.scale(e.scale, e.scale);
+                    ctx.fillStyle = COLOR_GOLD;
+                    ctx.beginPath(); ctx.arc(0, 0, 20, 0, Math.PI*2); ctx.fill();
+                    ctx.fillStyle = '#000';
+                    ctx.font = '20px Arial'; ctx.textAlign = 'center'; ctx.textBaseline='middle';
+                    ctx.fillText('₺', 0, 2);
+                    ctx.restore();
+                } else if (e.type === 'bad') {
+                    // Red Barrier / Interest
+                    ctx.save();
+                    ctx.translate(e.x, e.y);
+                    ctx.scale(e.scale, e.scale);
+                    ctx.fillStyle = COLOR_RED;
+                    ctx.fillRect(-20, -20, 40, 40);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '10px Arial'; ctx.textAlign = 'center';
+                    ctx.fillText('FAİZ', 0, 4);
+                    ctx.restore();
+                } else if (e.type === 'gates') {
+                    // Final Choice Gates
+                    const y = e.y;
+
+                    // Left Gate (Home)
+                    ctx.fillStyle = '#3498db';
+                    ctx.fillRect(0, y, 155, 100);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '20px Arial'; ctx.textAlign = 'center';
+                    ctx.fillText('EV', 77, y + 50);
+
+                    // Right Gate (Car)
+                    ctx.fillStyle = COLOR_RED;
+                    ctx.fillRect(165, y, 155, 100);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '20px Arial'; ctx.textAlign = 'center';
+                    ctx.fillText('ARABA', 242, y + 50);
+
+                    // Gate Post
+                    ctx.fillStyle = '#222';
+                    ctx.fillRect(155, y, 10, 100);
+                }
+            });
+
+            // Player
+            ctx.save();
+            ctx.translate(playerX, 400);
+            // Shadow
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.beginPath(); ctx.ellipse(0, 30, 20, 10, 0, 0, Math.PI*2); ctx.fill();
+
+            // Body (Sinpas Colors)
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.roundRect(-20, -30, 40, 60, 10);
+            ctx.fill();
+            // Stripe
+            ctx.fillStyle = COLOR_RED;
+            ctx.fillRect(-20, -10, 40, 20);
+            // Logo text
+            ctx.fillStyle = '#fff';
+            ctx.font = '10px Arial'; ctx.textAlign = 'center';
+            ctx.fillText('SİNPAŞ', 0, 4);
+            ctx.restore();
+
+            // Particles
+            particles.forEach(p => {
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.life / 20;
+                ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI*2); ctx.fill();
+                ctx.globalAlpha = 1;
+            });
+        }
+
+        function loop() {
+            if (isGameOver) return;
+            update();
+            draw();
+            gameLoopId = requestAnimationFrame(loop);
+        }
+
+        function gameOver() {
+            isGameOver = true;
+            cancelAnimationFrame(gameLoopId);
+
+            // Show End Screen
+            document.getElementById('hud').style.display = 'none';
+            const endScreen = document.getElementById('endScreen');
+            endScreen.classList.remove('hidden');
+            document.getElementById('finalScoreDisplay').innerText = new Intl.NumberFormat('tr-TR').format(score) + " TL";
+
+            // Add visual flair based on selection
+            if(selectedPath === 'ev') {
+                endScreen.style.background = 'linear-gradient(rgba(0,0,0,0.9), rgba(52, 152, 219, 0.4))';
+            } else {
+                endScreen.style.background = 'linear-gradient(rgba(0,0,0,0.9), rgba(212, 46, 18, 0.4))';
+            }
+        }
+
+        function submitLead() {
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+
+            let baseUrl = selectedPath === 'araba' ? urlAraba : urlEv;
+            if(!baseUrl) baseUrl = urlEv; // Fallback if died before gate selection logic fully registered (edge case)
+
             const finalUrl = new URL(baseUrl);
             finalUrl.searchParams.append('name', name);
             finalUrl.searchParams.append('phone', phone);
-            finalUrl.searchParams.append('budget', monthlyBudget);
+            finalUrl.searchParams.append('score', score);
 
             window.open(finalUrl.toString(), '_blank');
         }
-
-        function spawnConfetti() {
-            const container = document.getElementById('ad-container');
-            const colors = ['#D42E12', '#FF6B6B', '#FFCC00'];
-            for (let i = 0; i < 30; i++) {
-                const particle = document.createElement('div');
-                particle.classList.add('particle');
-                particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                particle.style.left = '50%';
-                particle.style.top = '50%';
-                container.appendChild(particle);
-
-                const angle = Math.random() * Math.PI * 2;
-                const dist = 50 + Math.random() * 80;
-                const tx = Math.cos(angle) * dist;
-                const ty = Math.sin(angle) * dist;
-
-                particle.animate([
-                    { transform: 'translate(0,0) scale(1)', opacity: 1 },
-                    { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
-                ], { duration: 800, easing: 'ease-out' }).onfinish = () => particle.remove();
-            }
-        }
-
-        // --- Timer ---
-        let time = 300; // 5 minutes
-        setInterval(() => {
-            if(time <= 0) return;
-            time--;
-            const m = Math.floor(time / 60).toString().padStart(2, '0');
-            const s = (time % 60).toString().padStart(2, '0');
-            document.getElementById('countdown').innerText = `${m}:${s}`;
-        }, 1000);
 
     </script>
 </body>
